@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Settings - FTI{% endblock %}
+{% block content %}
+
+<h1 style="font-size:20px; margin-bottom:16px;">Settings</h1>
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul class="flashes">
+    {% for message in messages %}
+      <li>{{ message }}</li>
+    {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
+
+<div class="card">
+    <div class="card-header"><h2>Notifications</h2></div>
+    <form method="POST" action="/settings">
+        <input type="hidden" name="form_type" value="notifications">
+        <label style="display:flex; align-items:center; justify-content:space-between; font-size:14px; padding:6px 0;">
+            <span>
+                <strong>Weather Alerts</strong>
+                <div style="font-size:12px; color:#888; margin-top:2px;">Get notified about rain, wind, or frost risk for your crops.</div>
+            </span>
+            <input type="checkbox" name="weather_alerts_enabled" {% if user.weather_alerts_enabled %}checked{% endif %} style="width:20px; height:20px; flex-shrink:0; margin-left:12px;">
+        </label>
+        <button type="submit" class="btn" style="width:100%; margin-top:16px;">Save</button>
+    </form>
+</div>
+
+<div class="card">
+    <div class="card-header"><h2>Preferences</h2></div>
+    <form method="POST" action="/settings">
+        <input type="hidden" name="form_type" value="preferences">
+
+        <div style="margin-bottom:14px;">
+            <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Default Farm</label>
+            <select name="default_farm_id" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+                <option value="">No default</option>
+                {% for farm in farms %}
+                <option value="{{ farm.farm_id }}" {% if user.default_farm_id == farm.farm_id %}selected{% endif %}>{{ farm.farm_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div style="margin-bottom:14px;">
+            <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Default Market Area</label>
+            <select name="default_market_area_id" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+                <option value="">No default</option>
+                {% for area in market_areas %}
+                <option value="{{ area.market_area_id }}" {% if user.default_market_area_id == area.market_area_id %}selected{% endif %}>{{ area.area_name }}{% if area.region %} ({{ area.region }}){% endif %}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div style="margin-bottom:18px;">
+            <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Units</label>
+            <select name="unit_system" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+                <option value="metric" {% if user.unit_system == 'metric' %}selected{% endif %}>Metric (°C, hectares)</option>
+                <option value="imperial" {% if user.unit_system == 'imperial' %}selected{% endif %}>Imperial (°F, acres)</option>
+            </select>
+        </div>
+
+        <button type="submit" class="btn" style="width:100%;">Save</button>
+    </form>
+</div>
+
+<div class="card">
+    <div class="card-header"><h2>Change Password</h2></div>
+    <form method="POST" action="/settings">
+        <input type="hidden" name="form_type" value="password">
+        <div style="margin-bottom:14px;">
+            <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Current Password</label>
+            <input type="password" name="current_password" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+        </div>
+        <div style="margin-bottom:14px;">
+            <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">New Password</label>
+            <input type="password" name="new_password" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+        </div>
+        <div style="margin-bottom:18px;">
+            <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Confirm New Password</label>
+            <input type="password" name="confirm_password" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+        </div>
+        <button type="submit" class="btn" style="width:100%;">Update Password</button>
+    </form>
+</div>
+
+<div class="card">
+    <div class="card-header"><h2>Account</h2></div>
+    <a href="/profile" class="btn btn-white" style="display:block; text-align:center; border:1px solid #2f7a3f;">View Profile</a>
+</div>
+
+{% endblock %}

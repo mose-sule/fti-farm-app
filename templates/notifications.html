@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Notifications - FTI{% endblock %}
+{% block content %}
+
+<h1 style="font-size:20px; margin-bottom:16px;">Notifications</h1>
+
+{% for note in notifications %}
+<div class="card notif-card {% if not note.is_read %}notif-unread{% endif %}">
+    <div class="item-thumb" style="width:38px; height:38px; font-size:18px;">{{ note.message | notification_icon }}</div>
+    <div style="flex:1; min-width:0;">
+        <div style="font-size:14px; color:#333;">{{ note.message }}</div>
+        <div style="font-size:12px; color:#888; margin-top:4px;">{{ note.created_at }}</div>
+    </div>
+</div>
+{% else %}
+<div class="card empty-card">
+    <div class="empty-card-icon">🔔</div>
+    <div class="empty-card-title">No notifications yet</div>
+    <div class="empty-card-sub">Weather alerts and farm activity updates will show up here.</div>
+</div>
+{% endfor %}
+
+{% endblock %}

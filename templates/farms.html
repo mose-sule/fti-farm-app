@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Farms - FTI{% endblock %}
+{% block content %}
+
+<div class="list-header">
+    <h1>Farms</h1>
+    <a href="/add-farm" class="btn">+ Add Farm</a>
+</div>
+
+{% for farm in farms %}
+<div class="card item-card">
+    <div class="item-thumb">🏡</div>
+    <div class="item-main">
+        <div class="item-title">{{ farm.farm_name }}</div>
+        <div class="item-meta">📍 {{ farm.location or "No location set" }}</div>
+        <div class="item-meta">📐 {{ farm.total_area_acres }} acres</div>
+        <div class="item-actions">
+            <a href="/farm-map/{{ farm.farm_id }}" class="btn btn-white" style="flex:1; text-align:center; border:1px solid #2f7a3f;">📍 Map</a>
+            <a href="/edit-farm/{{ farm.farm_id }}" class="btn btn-white" style="flex:1; text-align:center; border:1px solid #2f7a3f;">Edit</a>
+            <form method="POST" action="/delete-farm/{{ farm.farm_id }}" style="flex:1;" onsubmit="return confirm('Delete this farm? This cannot be undone.');">
+                <button type="submit" style="width:100%; background:#fed7d7; color:#9b2c2c; border:none; padding:10px; border-radius:10px; font-weight:600; font-size:14px;">Delete</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="card empty-card">
+    <div class="empty-card-icon">🏡</div>
+    <div class="empty-card-title">No farms yet</div>
+    <div class="empty-card-sub">Add your first farm to start tracking fields, crops, and harvests.</div>
+    <a href="/add-farm" class="btn">+ Add Your First Farm</a>
+</div>
+{% endfor %}
+
+{% endblock %}

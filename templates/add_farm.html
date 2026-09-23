@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Add Farm - FTI{% endblock %}
+{% block content %}
+
+<h1 style="font-size:20px; margin-bottom:16px;">Add Farm</h1>
+
+<form method="POST" action="/add-farm" class="card" id="farmForm">
+    <input type="hidden" name="latitude" id="latitude">
+    <input type="hidden" name="longitude" id="longitude">
+<div style="margin-bottom:14px;">
+        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Farm Location (drag pin to adjust)</label>
+        <div id="map" style="height:250px; border-radius:12px; overflow:hidden; border:1px solid #ddd;"></div>
+    </div>
+    <div style="margin-bottom:14px;">
+        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Farm Name</label>
+        <input type="text" name="farm_name" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+    </div>
+
+    <div style="margin-bottom:14px;">
+        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Location</label>
+        <input type="text" name="location" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+    </div>
+
+    <div style="margin-bottom:14px;">
+        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Total Area (acres)</label>
+        <input type="number" step="0.1" name="area" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+    </div>
+
+    <div style="margin-bottom:18px;">
+        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Market Area</label>
+        <select name="market_area_id" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+            <option value="">Select market area</option>
+            {% for area in market_areas %}
+            <option value="{{ area.market_area_id }}">{{ area.area_name }} ({{ area.region }})</option>
+            {% endfor %}
+        </select>
+    </div>
+    <button type="submit" class="btn" style="width:100%;">Add Farm</button>
+</form>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+    var defaultLat = -0.283;
+    var defaultLng = 35.997;
+    var map = L.map('map').setView([defaultLat, defaultLng], 13);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    var marker = L.marker([defaultLat, defaultLng], { draggable: true }).addTo(map);
+
+    function updateFields(lat, lng) {
+        document.getElementById('latitude').value = lat;
+        document.getElementById('longitude').value = lng;
+    }
+
+    updateFields(defaultLat, defaultLng);
+
+    marker.on('dragend', function() {
+        var pos = marker.getLatLng();
+        updateFields(pos.lat, pos.lng);
+    });
+
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+            var lat = position.coords.latitude;
+            var lng = position.coords.longitude;
+            map.setView([lat, lng], 15);
+            marker.setLatLng([lat, lng]);
+            updateFields(lat, lng);
+        });
+    }
+</script>
+
+{% endblock %}

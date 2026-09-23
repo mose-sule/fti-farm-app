@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Add Activity - FTI{% endblock %}
+{% block content %}
+
+<h1 style="font-size:20px; margin-bottom:16px;">Add Activity</h1>
+
+<form method="POST" action="/add-activity" class="card">
+    <div style="margin-bottom:14px;">
+        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Farm</label>
+        <select name="farm_id" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+            <option value="">Select farm</option>
+            {% for farm in farms %}
+            <option value="{{ farm.farm_id }}">{{ farm.farm_name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div style="margin-bottom:14px;">
+        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Activity Date</label>
+        <input type="date" name="activity_date" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+    </div>
+
+    <div style="margin-bottom:14px;">
+        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Activity Type</label>
+        <select name="activity_type" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+            <option value="">Select type</option>
+            <option value="Fertilizer application">Fertilizer application</option>
+            <option value="Weeding">Weeding</option>
+            <option value="Irrigation">Irrigation</option>
+            <option value="Pest control">Pest control</option>
+            <option value="Planting">Planting</option>
+            <option value="Other">Other</option>
+        </select>
+    </div>
+
+    <div style="margin-bottom:14px;">
+        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Crop</label>
+        <select name="crop_id" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+            <option value="">Select crop</option>
+            {% for crop in crops %}
+            <option value="{{ crop.crop_id }}">{{ crop.crop_name }}{% if crop.field_name %} – {{ crop.field_name }}{% endif %}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div style="margin-bottom:14px;">
+        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Input Used (optional)</label>
+        <input type="text" name="input_used" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+    </div>
+
+    <div style="margin-bottom:14px;">
+        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Quantity (optional)</label>
+        <input type="text" name="quantity" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+    </div>
+
+    <div style="margin-bottom:18px;">
+        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Notes (optional)</label>
+        <textarea name="notes" rows="3" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;"></textarea>
+    </div>
+
+    <button type="submit" class="btn" style="width:100%;">Add Activity</button>
+</form>
+
+{% endblock %}

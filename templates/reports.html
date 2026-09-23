@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Reports - FTI{% endblock %}
+{% block content %}
+
+<h1 style="font-size:20px; margin-bottom:16px;">Reports</h1>
+
+<div class="quick-actions-grid" style="grid-template-columns:1fr 1fr 1fr;">
+    <div class="card" style="text-align:center; padding:14px;">
+        <div style="font-size:24px; font-weight:800; color:#2f7a3f;">{{ total_farms }}</div>
+        <div style="font-size:11px; color:#888;">Farms</div>
+    </div>
+    <div class="card" style="text-align:center; padding:14px;">
+        <div style="font-size:24px; font-weight:800; color:#2f7a3f;">{{ total_fields }}</div>
+        <div style="font-size:11px; color:#888;">Fields</div>
+    </div>
+    <div class="card" style="text-align:center; padding:14px;">
+        <div style="font-size:24px; font-weight:800; color:#2f7a3f;">{{ active_crops }}</div>
+        <div style="font-size:11px; color:#888;">Active Crops</div>
+    </div>
+    <div class="card" style="text-align:center; padding:14px;">
+        <div style="font-size:24px; font-weight:800; color:#2f7a3f;">{{ total_harvests }}</div>
+        <div style="font-size:11px; color:#888;">Harvests</div>
+    </div>
+    <div class="card" style="text-align:center; padding:14px;">
+        <div style="font-size:24px; font-weight:800; color:#2f7a3f;">{{ total_soil_tests }}</div>
+        <div style="font-size:11px; color:#888;">Soil Tests</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2>Recent Harvests</h2>
+        <a href="/harvests" class="view-all">View all</a>
+    </div>
+    {% for h in recent_harvests %}
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; {% if not loop.last %}border-bottom:1px solid #f0f0f0;{% endif %}">
+        <div>
+            <div style="font-weight:600; font-size:14px;">{{ h.crop_name }}</div>
+            <div style="font-size:12px; color:#888;">{{ h.farm_name }} · {{ h.harvest_date }}</div>
+        </div>
+        <div style="font-size:13px; font-weight:600;">{{ h.quantity }} {{ h.unit }}</div>
+    </div>
+    {% else %}
+    <p style="color:#888; font-size:14px;">No harvests recorded yet.</p>
+    {% endfor %}
+</div>
+
+{% endblock %}

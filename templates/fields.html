@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Fields - FTI{% endblock %}
+{% block content %}
+
+<div class="list-header">
+    <h1>Fields</h1>
+    <a href="/add-field" class="btn">+ Add Field</a>
+</div>
+
+{% for field in fields %}
+<div class="card item-card">
+    <div class="item-thumb">🗺️</div>
+    <div class="item-main">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
+            <div class="item-title" style="margin-bottom:0;">{{ field.field_name }}</div>
+            <span style="font-weight:700; color:#2f7a3f; font-size:14px; white-space:nowrap; margin-left:8px;">{{ field.area_acres }} ac</span>
+        </div>
+        {% if field.farm_name %}<div class="item-meta">{{ field.farm_name }}</div>{% endif %}
+        <div class="item-meta">🧪 Soil type: {{ field.soil_type }}</div>
+        {% if field.notes %}<div class="item-meta" style="margin-top:2px;">{{ field.notes }}</div>{% endif %}
+        <div class="item-actions">
+            <a href="/edit-field/{{ field.field_id }}" class="btn btn-white" style="flex:1; text-align:center; border:1px solid #2f7a3f;">Edit</a>
+            <form method="POST" action="/delete-field/{{ field.field_id }}" style="flex:1;" onsubmit="return confirm('Delete this field?');">
+                <button type="submit" style="width:100%; background:#fed7d7; color:#9b2c2c; border:none; padding:10px; border-radius:10px; font-weight:600; font-size:14px;">Delete</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="card empty-card">
+    <div class="empty-card-icon">🗺️</div>
+    <div class="empty-card-title">No fields yet</div>
+    <div class="empty-card-sub">Add a field to start assigning crops to specific parts of your farm.</div>
+    <a href="/add-field" class="btn">+ Add Your First Field</a>
+</div>
+{% endfor %}
+
+{% endblock %}

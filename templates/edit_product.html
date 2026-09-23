@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Edit Product - FTI{% endblock %}
+{% block content %}
+
+<h1 style="font-size:20px; margin-bottom:16px;">Edit Product</h1>
+
+<form method="POST" action="/edit-product/{{ product.product_id }}" class="card">
+    <div style="margin-bottom:14px;">
+        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Farm</label>
+        <select name="farm_id" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+            {% for farm in farms %}
+            <option value="{{ farm.farm_id }}" {% if farm.farm_id == product.farm_id %}selected{% endif %}>{{ farm.farm_name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div style="margin-bottom:14px;">
+        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Crop Name</label>
+        <input type="text" name="crop_name" value="{{ product.crop_name }}" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+    </div>
+
+    <div style="margin-bottom:14px;">
+        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Harvest</label>
+        <select name="harvest_id" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+            {% for harvest in harvests %}
+            <option value="{{ harvest.harvest_id }}" {% if harvest.harvest_id == product.harvest_id %}selected{% endif %}>{{ harvest.crop_name }} — {{ harvest.harvest_date }} ({{ harvest.quantity }} {{ harvest.unit }})</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div style="margin-bottom:14px;">
+        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Batch Number</label>
+        <input type="text" name="batch_number" value="{{ product.batch_number }}" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+    </div>
+
+    <div style="margin-bottom:14px;">
+        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Product Date</label>
+        <input type="date" name="product_date" value="{{ product.product_date }}" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
+        <div>
+            <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Quantity</label>
+            <input type="number" step="0.1" name="quantity" value="{{ product.quantity }}" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+        </div>
+        <div>
+            <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Unit</label>
+            <input type="text" name="unit" value="{{ product.unit }}" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+        </div>
+    </div>
+
+    <div style="margin-bottom:14px;">
+        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Destination</label>
+        <input type="text" name="destination" value="{{ product.destination }}" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+    </div>
+
+    <div style="margin-bottom:18px;">
+        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Notes</label>
+        <textarea name="notes" rows="3" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">{{ product.notes }}</textarea>
+    </div>
+
+    <button type="submit" class="btn" style="width:100%;">Save Changes</button>
+</form>
+
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Activities - FTI{% endblock %}
+{% block content %}
+
+<div class="list-header">
+    <h1>Activities</h1>
+    <a href="/add-activity" class="btn">+ Add Activity</a>
+</div>
+
+{% for activity in activities %}
+<div class="card item-card">
+    <div class="item-thumb">{{ activity.activity_type | activity_icon }}</div>
+    <div class="item-main">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
+            <div class="item-title" style="margin-bottom:0;">{{ activity.activity_type }}</div>
+            <span style="font-size:12px; color:#888; white-space:nowrap; margin-left:8px;">{{ activity.activity_date }}</span>
+        </div>
+        <div class="item-meta">{{ activity.crop_name }}</div>
+        {% if activity.input_used %}<div class="item-meta">Input: {{ activity.input_used }}{% if activity.quantity %} — {{ activity.quantity }}{% endif %}</div>{% endif %}
+        {% if activity.notes %}<div class="item-meta" style="margin-top:2px;">{{ activity.notes }}</div>{% endif %}
+        <div class="item-actions">
+            <a href="/edit-activity/{{ activity.activity_id }}" class="btn btn-white" style="flex:1; text-align:center; border:1px solid #2f7a3f;">Edit</a>
+            <form method="POST" action="/delete-activity/{{ activity.activity_id }}" style="flex:1;" onsubmit="return confirm('Delete this activity?');">
+                <button type="submit" style="width:100%; background:#fed7d7; color:#9b2c2c; border:none; padding:10px; border-radius:10px; font-weight:600; font-size:14px;">Delete</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="card empty-card">
+    <div class="empty-card-icon">📋</div>
+    <div class="empty-card-title">No activities yet</div>
+    <div class="empty-card-sub">Log fertilizing, weeding, irrigation, and more as you work your fields.</div>
+    <a href="/add-activity" class="btn">+ Add Your First Activity</a>
+</div>
+{% endfor %}
+
+{% endblock %}

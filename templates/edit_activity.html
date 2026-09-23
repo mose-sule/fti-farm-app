@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Edit Activity - FTI{% endblock %}
+{% block content %}
+
+<h1 style="font-size:20px; margin-bottom:16px;">Edit Activity</h1>
+
+<form method="POST" action="/edit-activity/{{ activity.activity_id }}" class="card">
+    <div style="margin-bottom:14px;">
+        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Farm</label>
+        <select name="farm_id" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+            {% for farm in farms %}
+            <option value="{{ farm.farm_id }}" {% if farm.farm_id == activity.farm_id %}selected{% endif %}>{{ farm.farm_name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div style="margin-bottom:14px;">
+        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Activity Date</label>
+        <input type="date" name="activity_date" value="{{ activity.activity_date }}" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+    </div>
+
+    <div style="margin-bottom:14px;">
+        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Activity Type</label>
+        <select name="activity_type" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+            {% for option in ["Fertilizer application", "Weeding", "Irrigation", "Pest control", "Planting", "Other"] %}
+            <option value="{{ option }}" {% if option == activity.activity_type %}selected{% endif %}>{{ option }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div style="margin-bottom:14px;">
+        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Crop Name</label>
+        <input type="text" name="crop_name" value="{{ activity.crop_name }}" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+    </div>
+
+    <div style="margin-bottom:14px;">
+        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Input Used</label>
+        <input type="text" name="input_used" value="{{ activity.input_used }}" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+    </div>
+
+    <div style="margin-bottom:14px;">
+        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Quantity</label>
+        <input type="text" name="quantity" value="{{ activity.quantity }}" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+    </div>
+
+    <div style="margin-bottom:18px;">
+        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Notes</label>
+        <textarea name="notes" rows="3" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">{{ activity.notes }}</textarea>
+    </div>
+
+    <button type="submit" class="btn" style="width:100%;">Save Changes</button>
+</form>
+
+{% endblock %}

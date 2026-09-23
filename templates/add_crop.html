@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Add Crop - FTI{% endblock %}
+{% block content %}
+
+<h1 style="font-size:20px; margin-bottom:16px;">Add Crop</h1>
+
+{% if insights %}
+<div class="card" style="background:#fff8e6; border:1px solid #f0d78c;">
+    <div style="font-weight:700; font-size:14px; margin-bottom:10px;">📊 Before you plant — what's already growing nearby</div>
+    {% for crop in insights %}
+    <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:13px;">
+        <span>{{ crop.crop_name }}</span>
+        <span style="font-weight:600; color:{% if crop.percent >= 40 %}#c0392b{% elif crop.percent >= 25 %}#e67e22{% else %}#2f7a3f{% endif %};">{{ crop.percent }}%</span>
+    </div>
+    {% endfor %}
+    <a href="/market-insights" style="font-size:12px; color:#2f7a3f; font-weight:600;">View full market insights →</a>
+</div>
+{% endif %}
+
+<form method="POST" action="/add-crop" class="card">
+    <div style="margin-bottom:14px;">
+        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Farm</label>
+        <select name="farm_id" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+            <option value="">Select farm</option>
+            {% for farm in farms %}
+            <option value="{{ farm.farm_id }}">{{ farm.farm_name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div style="margin-bottom:14px;">
+        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Field</label>
+        <select name="field_id" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+            <option value="">Select field</option>
+            {% for field in fields %}
+            <option value="{{ field.field_id }}">{{ field.field_name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div style="margin-bottom:14px;">
+        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Crop Name</label>
+        <input type="text" name="crop_name" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+    </div>
+
+    <div style="margin-bottom:14px;">
+        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Variety</label>
+        <input type="text" name="variety" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+    </div>
+
+    <div style="margin-bottom:14px;">
+        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Planting Date</label>
+        <input type="date" name="planting_date" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+    </div>
+
+    <div style="margin-bottom:14px;">
+        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Expected Harvest Date</label>
+        <input type="date" name="expected_harvest_date" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+    </div>
+
+    <div style="margin-bottom:14px;">
+        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Area (acres)</label>
+        <input type="number" step="0.1" name="area_acres" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+    </div>
+
+    <div style="margin-bottom:18px;">
+        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Status</label>
+        <select name="status" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+            <option value="growing">Growing</option>
+            <option value="harvested">Harvested</option>
+            <option value="failed">Failed</option>
+        </select>
+    </div>
+
+    <button type="submit" class="btn" style="width:100%;">Add Crop</button>
+</form>
+
+{% endblock %}

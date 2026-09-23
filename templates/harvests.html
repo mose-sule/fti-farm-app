@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Harvests - FTI{% endblock %}
+{% block content %}
+
+<div class="list-header">
+    <h1>Harvests</h1>
+    <a href="/add-harvest" class="btn">+ Add Harvest</a>
+</div>
+
+{% for harvest in harvests %}
+<div class="card item-card">
+    <div class="item-thumb">{{ harvest.crop_name | crop_icon }}</div>
+    <div class="item-main">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
+            <div class="item-title" style="margin-bottom:0;">{{ harvest.crop_name }}</div>
+            <span style="font-size:12px; color:#888; white-space:nowrap; margin-left:8px;">{{ harvest.harvest_date }}</span>
+        </div>
+        <div class="item-meta">
+            {{ harvest.quantity }} {{ harvest.unit }}
+            {% if harvest.quality %}· {{ harvest.quality }} quality{% endif %}
+        </div>
+        {% if harvest.notes %}<div class="item-meta" style="margin-top:2px;">{{ harvest.notes }}</div>{% endif %}
+        <div class="item-actions">
+            <a href="/edit-harvest/{{ harvest.harvest_id }}" class="btn btn-white" style="flex:1; text-align:center; border:1px solid #2f7a3f;">Edit</a>
+            <form method="POST" action="/delete-harvest/{{ harvest.harvest_id }}" style="flex:1;" onsubmit="return confirm('Delete this harvest?');">
+                <button type="submit" style="width:100%; background:#fed7d7; color:#9b2c2c; border:none; padding:10px; border-radius:10px; font-weight:600; font-size:14px;">Delete</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="card empty-card">
+    <div class="empty-card-icon">🌾</div>
+    <div class="empty-card-title">No harvests yet</div>
+    <div class="empty-card-sub">Log a harvest once you've picked crops from your fields.</div>
+    <a href="/add-harvest" class="btn">+ Add Your First Harvest</a>
+</div>
+{% endfor %}
+
+{% endblock %}

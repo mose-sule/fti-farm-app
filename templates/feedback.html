@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Feedback - FTI{% endblock %}
+{% block content %}
+
+<h1 style="font-size:20px; margin-bottom:16px;">Send Feedback</h1>
+
+<div class="card">
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <ul class="flashes">
+        {% for message in messages %}
+          <li>{{ message }}</li>
+        {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="/feedback">
+        <div style="margin-bottom:14px;">
+            <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">What's on your mind?</label>
+            <textarea name="message" rows="5" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; font-family:inherit;"></textarea>
+        </div>
+        <button type="submit" class="btn" style="width:100%;">Send</button>
+    </form>
+</div>
+
+{% endblock %}

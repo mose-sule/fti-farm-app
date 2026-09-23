@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Edit Farm - FTI{% endblock %}
+{% block content %}
+
+<h1 style="font-size:20px; margin-bottom:16px;">Edit Farm</h1>
+
+<form method="POST" action="/edit-farm/{{ farm.farm_id }}" class="card">
+    <div style="margin-bottom:14px;">
+        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Farm Name</label>
+        <input type="text" name="farm_name" value="{{ farm.farm_name }}" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+    </div>
+
+    <div style="margin-bottom:14px;">
+        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Location</label>
+        <input type="text" name="location" value="{{ farm.location }}" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+    </div>
+
+    <div style="margin-bottom:14px;">
+        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Total Area (acres)</label>
+        <input type="number" step="0.1" name="area" value="{{ farm.total_area_acres }}" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+    </div>
+
+    <div style="margin-bottom:18px;">
+        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Market Area</label>
+        <select name="market_area_id" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+            {% for area in market_areas %}
+            <option value="{{ area.market_area_id }}" {% if area.market_area_id == farm.market_area_id %}selected{% endif %}>{{ area.area_name }} ({{ area.region }})</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <button type="submit" class="btn" style="width:100%;">Save Changes</button>
+</form>
+
+{% endblock %}

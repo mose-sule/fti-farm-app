@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Help - FTI{% endblock %}
+{% block content %}
+
+<h1 style="font-size:20px; margin-bottom:16px;">Help & Support</h1>
+
+<div class="card">
+    <div class="card-header"><h2>Getting Started</h2></div>
+    <p style="font-size:14px; color:#333; line-height:1.6;">Add your first farm from the "Add Farm" button on your dashboard, then add fields, crops, and start logging activities and harvests as you go.</p>
+</div>
+
+<div class="card">
+    <div class="card-header"><h2>Frequently Asked Questions</h2></div>
+    <div style="margin-bottom:14px;">
+        <strong style="font-size:14px;">Why don't I see weather on my dashboard?</strong>
+        <p style="font-size:13px; color:#666; margin-top:4px;">Weather requires a farm location. Add or edit a farm and set its location on the map.</p>
+    </div>
+    <div style="margin-bottom:14px;">
+        <strong style="font-size:14px;">What does the Market Insights supply badge mean?</strong>
+        <p style="font-size:13px; color:#666; margin-top:4px;">It shows how many farms in your market area are currently growing the same crop, helping you avoid oversupplying a crop that many neighbors are already planting.</p>
+    </div>
+    <div>
+        <strong style="font-size:14px;">Can I manage more than one farm?</strong>
+        <p style="font-size:13px; color:#666; margin-top:4px;">Yes — add multiple farms from the Farms tab, and switch between them from the menu.</p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header"><h2>Still need help?</h2></div>
+    <a href="/feedback" class="btn" style="display:block; text-align:center;">Send Feedback</a>
+</div>
+
+{% endblock %}

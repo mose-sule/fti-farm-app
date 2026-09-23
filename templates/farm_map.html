@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}{{ farm.farm_name }} - Map{% endblock %}
+{% block content %}
+
+<h1 style="font-size:20px; margin-bottom:6px;">{{ farm.farm_name }}</h1>
+<p style="color:#666; font-size:13px; margin-bottom:16px;">{{ farm.location }}</p>
+
+{% if farm.latitude and farm.longitude %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<div id="map" style="height:400px; border-radius:16px; overflow:hidden; margin-bottom:16px;"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+    var map = L.map('map').setView([{{ farm.latitude }}, {{ farm.longitude }}], 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+    L.marker([{{ farm.latitude }}, {{ farm.longitude }}])
+        .addTo(map)
+        .bindPopup("{{ farm.farm_name }}")
+        .openPopup();
+</script>
+{% else %}
+<div class="card">
+    <p style="color:#888; font-size:14px;">This farm doesn't have a location saved yet. Edit it to capture your current location.</p>
+</div>
+{% endif %}
+
+{% endblock %}

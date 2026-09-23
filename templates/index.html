@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - FTI{% endblock %}
+{% block content %}
+
+<div class="dashboard-header">
+    <div>
+        <h1 class="greeting">Good morning{% if session.full_name %}, {{ session.full_name.split(' ')[0] }}{% endif %}! 👋</h1>
+        <p class="greeting-sub">Your farm is growing. Here's what's happening today.</p>
+    </div>
+    {% if weather %}
+    <div class="weather-panel">
+        <div class="weather-panel-location">📍 {{ farm_location.location if farm_location else "Farm Location" }}</div>
+        <div class="weather-panel-main">
+            <span class="weather-panel-icon">🌤️</span>
+            <span class="weather-panel-temp">{{ weather.temp }}°C</span>
+        </div>
+        <div class="weather-panel-desc">{{ weather.description }}</div>
+    </div>
+    {% else %}
+    <a href="/add-farm" class="weather-panel weather-panel-empty">Add farm location<br>to see weather</a>
+    {% endif %}
+</div>
+
+<div class="quick-actions-grid">
+    <a href="/add-activity" class="quick-action">
+        <span class="qa-icon">➕</span>
+        <span class="qa-text"><strong>Add Activity</strong><small>Record farm activities</small></span>
+        <span class="qa-chevron">›</span>
+    </a>
+    <a href="/add-crop" class="quick-action">
+        <span class="qa-icon">🌱</span>
+        <span class="qa-text"><strong>Add Crop</strong><small>Manage your crops</small></span>
+        <span class="qa-chevron">›</span>
+    </a>
+    <a href="/add-harvest" class="quick-action">
+        <span class="qa-icon">🌾</span>
+        <span class="qa-text"><strong>Add Harvest</strong><small>Log harvest details</small></span>
+        <span class="qa-chevron">›</span>
+    </a>
+    <a href="/add-soil-test" class="quick-action">
+        <span class="qa-icon">🧪</span>
+        <span class="qa-text"><strong>Soil Test</strong><small>Check soil health</small></span>
+        <span class="qa-chevron">›</span>
+    </a>
+    <a href="/add-field" class="quick-action">
+        <span class="qa-icon">🗺️</span>
+        <span class="qa-text"><strong>Add Field</strong><small>Manage farm fields</small></span>
+        <span class="qa-chevron">›</span>
+    </a>
+    <a href="/add-farm" class="quick-action">
+        <span class="qa-icon">🏡</span>
+        <span class="qa-text"><strong>Add Farm</strong><small>Register a new farm</small></span>
+        <span class="qa-chevron">›</span>
+    </a>
+</div>
+
+<div class="card crop-status-card">
+    <div class="crop-status-header">
+        <div>
+            <div class="crop-status-title">🌿 Crop Status</div>
+            <div class="crop-status-sub">{{ crop_count }} active crop{{ 's' if crop_count != 1 }} across {{ field_count }} field{{ 's' if field_count != 1 }}</div>
+        </div>
+        <a href="/crops" class="pill-link">View all →</a>
+    </div>
+    <div class="crop-status-list">
+        {% for crop in crops_nearing_harvest %}
+        <div class="crop-row">
+            <div class="crop-thumb">{{ crop.icon }}</div>
+            <div class="crop-row-main">
+                <div class="crop-row-top">
+                    <strong>{{ crop.crop_name }}</strong>
+                </div>
+                <div class="crop-row-meta">{{ crop.field_name }} • {{ crop.days_left }} days to harvest</div>
+                <div class="progress-track"><div class="progress-fill" style="width:{{ crop.percent }}%;"></div></div>
+            </div>
+        </div>
+        {% else %}
+        <p class="empty-state" style="padding:14px;">No crops currently growing.</p>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2>📊 Market Insights</h2>
+        <a href="/market-insights" class="view-all">View all →</a>
+    </div>
+    <p class="card-subtitle">Based on regional data</p>
+    {% for item in market_insights %}
+    <div class="market-row">
+        <div class="market-thumb">{{ item.icon }}</div>
+        <div class="market-row-main">
+            <div class="market-row-top"><strong>{{ item.crop_name }}</strong> <span class="badge badge-{{ item.supply_class }}">{{ item.supply_label }}</span></div>
+            <div class="market-row-meta">{{ item.percent }}% of monitored farms</div>
+        </div>
+    </div>
+    {% else %}
+    <p class="empty-state">No market data yet. <a href="/market-insights">Set up your market area →</a></p>
+    {% endfor %}
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2>Recent Activities</h2>
+        <a href="/activities" class="view-all">View all</a>
+    </div>
+    {% for activity in recent_activities %}
+    <div class="activity-row">
+        <div class="activity-icon">🌿</div>
+        <div class="activity-row-main">
+            <strong>{{ activity.activity_type }}</strong>
+            <div class="activity-row-meta">{{ activity.crop_name }}{% if activity.field_name %} – {{ activity.field_name }}{% endif %}{% if activity.farm_name %} ({{ activity.farm_name }}){% endif %}</div>
+        </div>
+        <div class="activity-row-time">{{ activity.time_ago }}</div>
+    </div>
+    {% else %}
+    <p class="empty-state">No activities logged yet.</p>
+    {% endfor %}
+</div>
+{% if daily_forecast %}
+<div class="card">
+    <div class="card-header">
+        <h2>Weather Forecast</h2>
+    </div>
+    <div class="forecast-strip">
+        {% for day in daily_forecast %}
+        <div class="forecast-day">
+            <div class="forecast-day-label">{{ day.day_label }}</div>
+            <div class="forecast-day-icon">{{ day.icon }}</div>
+            <div class="forecast-day-temps">{{ day.high }}° <small>{{ day.low }}°</small></div>
+            <div class="forecast-day-rain">💧 {{ day.rain_percent }}%</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+<div class="card farm-tip">
+    <div class="farm-tip-icon">💡</div>
+    <div class="farm-tip-text">
+        <strong>Farm Tip</strong>
+        <p>Regular soil testing improves yield. Test your soil every season.</p>
+    </div>
+</div>
+
+<script>
+if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(function(position) {
+        var lat = position.coords.latitude;
+        var lon = position.coords.longitude;
+        fetch('/api/weather?lat=' + lat + '&lon=' + lon)
+            .then(function(response) { return response.json(); })
+            .catch(function() {});
+    });
+}
+</script>
+
+{% endblock %}

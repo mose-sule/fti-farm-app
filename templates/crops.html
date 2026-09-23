@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Crops - FTI{% endblock %}
+{% block content %}
+
+<div class="list-header">
+    <h1>Crops</h1>
+    <a href="/add-crop" class="btn">+ Add Crop</a>
+</div>
+
+{% for crop in crops %}
+<div class="card item-card">
+    <div class="item-thumb">{{ crop.crop_name | crop_icon }}</div>
+    <div class="item-main">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
+            <div class="item-title" style="margin-bottom:0;">{{ crop.crop_name }}</div>
+            <span style="background:#eafaf0; color:#2f7a3f; font-size:11px; font-weight:600; padding:4px 10px; border-radius:20px; text-transform:capitalize; white-space:nowrap; margin-left:8px;">{{ crop.status }}</span>
+        </div>
+        <div class="item-meta">{{ crop.variety }}{% if crop.field_name %} · {{ crop.field_name }}{% endif %}</div>
+        <div class="item-meta">🗓️ Planted {{ crop.planting_date }} → {{ crop.expected_harvest_date }}</div>
+        <div class="item-meta">📐 {{ crop.area_acres }} acres</div>
+        <div class="item-actions">
+            <a href="/edit-crop/{{ crop.crop_id }}" class="btn btn-white" style="flex:1; text-align:center; border:1px solid #2f7a3f;">Edit</a>
+            <form method="POST" action="/delete-crop/{{ crop.crop_id }}" style="flex:1;" onsubmit="return confirm('Delete this crop?');">
+                <button type="submit" style="width:100%; background:#fed7d7; color:#9b2c2c; border:none; padding:10px; border-radius:10px; font-weight:600; font-size:14px;">Delete</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="card empty-card">
+    <div class="empty-card-icon">🌱</div>
+    <div class="empty-card-title">No crops yet</div>
+    <div class="empty-card-sub">Add a crop to start tracking its growth and harvest date.</div>
+    <a href="/add-crop" class="btn">+ Add Your First Crop</a>
+</div>
+{% endfor %}
+
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Market Insights - FTI{% endblock %}
+{% block content %}
+
+<h1 style="font-size:20px; margin-bottom:6px;">Market Insights</h1>
+
+{% if market_area %}
+<p style="color:#666; font-size:13px; margin-bottom:16px;">{{ market_area.area_name }}, {{ market_area.region }}</p>
+{% endif %}
+
+{% if insights is none %}
+<div class="card">
+    <p style="color:#888; font-size:14px;">Add a farm with a market area selected to see insights for your region.</p>
+</div>
+{% elif insights|length == 0 %}
+<div class="card">
+    <p style="color:#888; font-size:14px;">No crops are currently being tracked in your market area yet. Check back as more farmers join.</p>
+</div>
+{% else %}
+<div class="card">
+    <div style="font-size:14px; color:#666; margin-bottom:14px;">
+        Here's what's currently growing across farms in your area. Crops with a high share may face price pressure at harvest.
+    </div>
+
+    {% for crop in insights %}
+    <div style="margin-bottom:16px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+            <span style="font-weight:600; font-size:14px;">{{ crop.crop_name }}</span>
+            <span style="font-weight:700; font-size:14px; color:{% if crop.percent >= 40 %}#c0392b{% elif crop.percent >= 25 %}#e67e22{% else %}#2f7a3f{% endif %};">
+                {{ crop.percent }}%
+            </span>
+        </div>
+        <div style="font-size:12px; color:#888; margin-bottom:6px;">{{ crop.count }} farm(s) growing this</div>
+        <div style="background:#eee; border-radius:6px; height:6px; overflow:hidden;">
+            <div style="background:{% if crop.percent >= 40 %}#c0392b{% elif crop.percent >= 25 %}#e67e22{% else %}#2f7a3f{% endif %}; height:100%; width:{{ crop.percent }}%;"></div>
+        </div>
+        {% if crop.percent >= 40 %}
+        <div style="font-size:12px; color:#c0392b; margin-top:4px;">⚠️ Heavily planted — consider an alternative crop</div>
+        {% elif crop.percent >= 25 %}
+        <div style="font-size:12px; color:#e67e22; margin-top:4px;">⚠ Moderately planted — plant with caution</div>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% endblock %}

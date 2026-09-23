@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        {% block title %}
+        Farm Tech Intelligence
+        {% endblock %}
+    </title>
+    <link
+        rel="stylesheet"
+       href="{{ url_for('static', filename='css/style.css') }}"
+    ><link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css"
+    >
+<style>
+        .flashes { list-style: none; margin-bottom: 16px; padding: 0; }
+        .flashes li {
+            background: #fed7d7; color: #9b2c2c; padding: 10px 14px;
+            border-radius: 8px; font-size: 14px; margin-bottom: 8px;
+        }
+        
+       
+        .card-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 14px;
+        }
+        .card-header h2 { font-size: 17px; font-weight: 700; margin: 0; }
+        .view-all { color: #2f7a3f; font-size: 13px; font-weight: 600; text-decoration: none; }
+        .btn {
+            display: inline-block; background: #2f7a3f; color: white;
+            padding: 10px 18px; border-radius: 10px; text-decoration: none;
+            font-size: 14px; font-weight: 600; border: none; cursor: pointer;
+        }
+        .btn-white { background: white; color: #2f7a3f; }
+       .account-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            min-width: 220px;
+            z-index: 100;
+            overflow: hidden;
+        }
+        .account-dropdown.show { display: block; }
+        .account-dropdown a {
+            display: block;
+            padding: 10px 14px;
+            font-size: 13px;
+            color: #1a1a1a;
+            text-decoration: none;
+        }
+        .account-dropdown a:hover { background: #f5f7f5; }
+    </style>
+</head>
+
+<body>
+
+<div class="app-layout">
+
+
+    <!-- =========================
+         SIDEBAR
+    ========================== -->
+
+    {% if session.user_id %}
+    <aside class="app-sidebar">
+   
+
+        <div class="brand">
+
+            <div class="brand-icon">
+                🌱
+            </div>
+
+            <div>
+                <strong>FTI</strong>
+                <span>FARM TECH<br>INTELLIGENCE</span>
+            </div>
+
+        </div>
+
+
+        <nav class="sidebar-nav">
+
+            <a href="/" class="nav-link">
+                🏠
+                <span>Dashboard</span>
+            </a>
+
+            <a href="/farms" class="nav-link">
+                🏡
+                <span>My Farm</span>
+            </a>
+
+            <a href="/crops" class="nav-link">
+                🌱
+                <span>Crops</span>
+            </a>
+
+            <a href="/fields" class="nav-link">
+                🗺️
+                <span>Fields</span>
+            </a>
+
+            <a href="/soil" class="nav-link">
+                🧪
+                <span>Soil</span>
+            </a>
+
+            <a href="/activities" class="nav-link">
+                🚜
+                <span>Activities</span>
+            </a>
+
+            <a href="/harvests" class="nav-link">
+                🌽
+                <span>Harvests</span>
+            </a>
+
+            <a href="/products" class="nav-link">
+                📦
+                <span>Products</span>
+            </a>
+
+        </nav>
+
+
+        <div class="sidebar-bottom">
+
+            <div class="farmer-profile">
+
+                <div class="profile-icon">
+                    👨🏾‍🌾
+                </div>
+
+                <div>
+                    <strong>{{ session.full_name or "Farm Owner" }}</strong>
+                    <span>FTI Farmer</span>
+                </div>
+
+            </div>
+
+            <a href="/logout" style="display:block; text-align:center; margin-top:10px; padding:8px; border-radius:8px; background:#fed7d7; color:#9b2c2c; text-decoration:none; font-size:13px; font-weight:600;">
+                Log Out
+            </a>
+
+        </div>
+
+    </aside>
+    {% endif %}
+
+
+
+    <!-- =========================
+         MAIN APPLICATION
+    ========================== -->
+
+    <div class="app-main">
+
+
+        <!-- TOP BAR -->
+
+        <header class="top-bar">
+
+{% if session.user_id %}
+            <div style="position:relative;">
+                <button class="menu-button" type="button" onclick="document.getElementById('accountMenu').classList.toggle('show')">
+                    ☰
+                </button>
+                <div id="accountMenu" class="account-dropdown">
+                    <div class="dropdown-user">{{ session.full_name or "Account" }}</div>
+
+                    <div class="dropdown-section-label">Account</div>
+                    <a href="/switch-farm" class="dropdown-item"><i class="ti ti-refresh"></i>Switch farm</a>
+                    <a href="/settings" class="dropdown-item"><i class="ti ti-settings"></i>Settings</a>
+
+                    <div class="dropdown-section-label">App</div>
+                    <a href="/help" class="dropdown-item"><i class="ti ti-help"></i>Help and support</a>
+                    <a href="/about" class="dropdown-item"><i class="ti ti-info-circle"></i>About FTI</a>
+                    <a href="/feedback" class="dropdown-item"><i class="ti ti-message-2"></i>Send feedback</a>
+                    <a href="/terms" class="dropdown-item"><i class="ti ti-file-text"></i>Terms and privacy</a>
+                </div>
+            </div>
+{% endif %}
+
+            <div class="mobile-brand">
+
+                🌱
+                <strong>FTI</strong>
+
+            </div>
+
+
+            <div class="top-bar-spacer"></div>
+
+{% if session.user_id and weather %}
+            <div class="weather-summary">
+                ☀️
+                <span>
+                    {{ weather.temp }}°C
+                    <small>{{ farm_location.location if farm_location else "" }}</small>
+                </span>
+            </div>
+            {% endif %}
+
+{% if session.user_id %}
+            <a href="/notifications" style="position:relative; text-decoration:none; font-size:22px; display:inline-block;">
+                🔔
+                {% if unread_count > 0 %}
+                <span style="position:absolute; top:-6px; right:-8px; background:#e53e3e; color:white; font-size:10px; border-radius:50%; width:16px; height:16px; display:flex; align-items:center; justify-content:center;">{{ unread_count }}</span>
+                {% endif %}
+            </a>
+
+
+            <a href="/profile" class="top-profile" style="text-decoration:none;">
+                {{ (session.full_name or "F")[0]|upper }}
+            </a>
+{% endif %}
+        </header>
+
+
+
+        <!-- PAGE CONTENT -->
+
+        <main class="page-container">
+
+            {% with messages = get_flashed_messages() %}
+              {% if messages %}
+                <ul class="flashes">
+                {% for message in messages %}
+                  <li>{{ message }}</li>
+                {% endfor %}
+                </ul>
+              {% endif %}
+            {% endwith %}
+
+            {% block content %}
+            {% endblock %}
+
+        </main>
+
+
+    </div>
+
+</div>
+
+
+
+<!-- =========================
+     MOBILE BOTTOM NAVIGATION
+========================== -->
+{% if session.user_id %}
+<nav class="mobile-nav">
+      <a href="/">
+        <span>🏠</span>
+        <small>Home</small>
+    </a>
+      
+    <a href="/farms">
+        <span>🏡</span>
+        <small>Farms</small>
+    </a>
+
+    <a href="/activities">
+        <span>📋</span>
+        <small>Activities</small>
+    </a>
+
+    <a href="/reports">
+        <span>📊</span>
+        <small>Reports</small>
+    </a>
+
+    <a href="/profile">
+        <span>👤</span>
+        <small>Profile</small>
+    </a>
+
+</nav>
+{% endif %}
+
+<script>
+document.addEventListener('click', function(event) {
+    var menu = document.getElementById('accountMenu');
+    var button = document.querySelector('.menu-button');
+    if (menu && menu.classList.contains('show')) {
+        if (!menu.contains(event.target) && event.target !== button) {
+            menu.classList.remove('show');
+        }
+    }
+});
+</script>
+</body>
+</html>

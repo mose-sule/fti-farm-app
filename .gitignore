@@ -1,0 +1,6 @@
+farm.db
+.env
+__pycache__/
+*.pyc
+server_log.txt
+cookies.txt

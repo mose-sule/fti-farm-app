@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log In - FTI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        html, body {
+            margin: 0;
+            min-height: 100vh;
+            background: linear-gradient(rgba(20,60,25,0.55), rgba(20,60,25,0.75)), url('/static/images/hero-tractor.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+        .login-page { display:flex; flex-direction:column; min-height:100vh; }
+        .login-header { padding:48px 24px 0; text-align:center; }
+        .login-icon { width:56px; height:56px; border-radius:50%; background:rgba(255,255,255,0.15); display:flex; align-items:center; justify-content:center; margin:0 auto 10px; font-size:26px; }
+        .login-title { font-size:20px; font-weight:700; color:white; }
+        .login-tagline { font-size:12px; color:#dceedb; margin-top:2px; }
+        .login-spacer { flex:1; }
+        .login-card { background:white; border-radius:24px 24px 0 0; padding:26px 24px 32px; box-shadow:0 -4px 20px rgba(0,0,0,0.1); }
+        .login-card h2 { font-size:16px; font-weight:600; margin:0 0 16px; }
+        .auth-field { margin-bottom:14px; }
+        .auth-field label { display:block; font-size:13px; font-weight:600; margin-bottom:6px; }
+        .auth-field input { width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; }
+    </style>
+</head>
+<body>
+
+<div class="login-page">
+    <div class="login-header">
+        <div class="login-icon">🌱</div>
+        <div class="login-title">FTI</div>
+        <div class="login-tagline">Farm Tech Intelligence</div>
+        <p class="auth-hero-intro">Track crops, plan harvests, and see market trends before you plant.</p>
+    
+    </div>
+
+    <div class="login-spacer"></div>
+
+    <div class="login-card">
+
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <ul class="flashes">
+            {% for message in messages %}
+              <li>{{ message }}</li>
+            {% endfor %}
+            </ul>
+          {% endif %}
+        {% endwith %}
+
+        <h2>Welcome back</h2>
+        <form method="POST" action="/login">
+            <div class="auth-field">
+                <label>Email</label>
+                <input type="email" name="email" required>
+            </div>
+            <div class="auth-field">
+                <label>Password</label>
+                <input type="password" name="password" required>
+            </div>
+            <button type="submit" class="btn" style="width:100%;">Log In</button>
+        </form>
+        <p style="text-align:center; margin-top:16px; font-size:13px; color:#666;">
+            Don't have an account? <a href="/signup" style="color:#2f7a3f; font-weight:600;">Sign up</a>
+        </p>
+
+    </div>
+</div>
+
+</body>
+</html>
