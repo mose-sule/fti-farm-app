@@ -121,7 +121,6 @@ def login_required(view_func):
     @wraps(view_func)
     def wrapped(*args, **kwargs):
         if "user_id" not in session:
-            flash("Please log in first.")
             return redirect("/login")
         return view_func(*args, **kwargs)
     return wrapped
