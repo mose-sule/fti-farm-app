@@ -653,30 +653,40 @@ def add_field():
 @login_required
 def edit_field(field_id):
     connection = get_database()
+    user_id = current_user_id()
+    farms = connection.execute("SELECT * FROM farms WHERE user_id = ?", (user_id,)).fetchall()
+
+    field = connection.execute("""
+        SELECT * FROM fields WHERE field_id = ? AND farm_id IN (SELECT farm_id FROM farms WHERE user_id = ?)
+    """, (field_id, user_id)).fetchone()
+
+    if field is None:
+        flash("Field not found.")
+        return redirect("/fields")
 
     if request.method == "POST":
         try:
             data = form_data("farm_id", "field_name", "area_acres", "soil_type", optional=["notes"])
         except ValueError as e:
             flash(str(e))
-            field = connection.execute("SELECT * FROM fields WHERE field_id = ?", (field_id,)).fetchone()
-            farms = connection.execute("SELECT * FROM farms WHERE user_id = ?", (current_user_id(),)).fetchall()
+            return render_template("edit_field.html", field=field, farms=farms)
+
+        if str(data["farm_id"]) not in [str(f["farm_id"]) for f in farms]:
+            flash("Invalid farm selected.")
             return render_template("edit_field.html", field=field, farms=farms)
 
         connection.execute("""
             UPDATE fields SET
                 farm_id = ?, field_name = ?, area_acres = ?, soil_type = ?, notes = ?
-            WHERE field_id = ?
+            WHERE field_id = ? AND farm_id IN (SELECT farm_id FROM farms WHERE user_id = ?)
         """, (
             data["farm_id"], data["field_name"], data["area_acres"],
-            data["soil_type"], data["notes"], field_id
+            data["soil_type"], data["notes"], field_id, user_id
         ))
         connection.commit()
 
         return redirect("/fields")
 
-    field = connection.execute("SELECT * FROM fields WHERE field_id = ?", (field_id,)).fetchone()
-    farms = connection.execute("SELECT * FROM farms WHERE user_id = ?", (current_user_id(),)).fetchall()
     return render_template("edit_field.html", field=field, farms=farms)
 
 
@@ -685,7 +695,9 @@ def edit_field(field_id):
 def delete_field(field_id):
     connection = get_database()
     try:
-        connection.execute("DELETE FROM fields WHERE field_id = ?", (field_id,))
+        connection.execute("""
+            DELETE FROM fields WHERE field_id = ? AND farm_id IN (SELECT farm_id FROM farms WHERE user_id = ?)
+        """, (field_id, current_user_id()))
         connection.commit()
     except sqlite3.IntegrityError:
         flash("Can't delete this field — it still has crops or soil tests linked to it. Delete those first.")
@@ -746,6 +758,19 @@ def add_crop():
 @login_required
 def edit_crop(crop_id):
     connection = get_database()
+    user_id = current_user_id()
+    farms = connection.execute("SELECT * FROM farms WHERE user_id = ?", (user_id,)).fetchall()
+    fields = connection.execute("""
+        SELECT * FROM fields WHERE farm_id IN (SELECT farm_id FROM farms WHERE user_id = ?)
+    """, (user_id,)).fetchall()
+
+    crop = connection.execute("""
+        SELECT * FROM crops WHERE crop_id = ? AND farm_id IN (SELECT farm_id FROM farms WHERE user_id = ?)
+    """, (crop_id, user_id)).fetchone()
+
+    if crop is None:
+        flash("Crop not found.")
+        return redirect("/crops")
 
     if request.method == "POST":
         try:
@@ -755,28 +780,22 @@ def edit_crop(crop_id):
             )
         except ValueError as e:
             flash(str(e))
-            crop = connection.execute("SELECT * FROM crops WHERE crop_id = ?", (crop_id,)).fetchone()
-            farms = connection.execute("SELECT * FROM farms WHERE user_id = ?", (current_user_id(),)).fetchall()
-            fields = connection.execute("SELECT * FROM fields").fetchall()
             return render_template("edit_crop.html", crop=crop, farms=farms, fields=fields)
 
         connection.execute("""
             UPDATE crops SET
                 farm_id = ?, field_id = ?, crop_name = ?, variety = ?,
                 planting_date = ?, expected_harvest_date = ?, area_acres = ?, status = ?
-            WHERE crop_id = ?
+            WHERE crop_id = ? AND farm_id IN (SELECT farm_id FROM farms WHERE user_id = ?)
         """, (
             data["farm_id"], data["field_id"], data["crop_name"], data["variety"],
             data["planting_date"], data["expected_harvest_date"], data["area_acres"],
-            data["status"], crop_id
+            data["status"], crop_id, user_id
         ))
         connection.commit()
 
         return redirect("/crops")
 
-    crop = connection.execute("SELECT * FROM crops WHERE crop_id = ?", (crop_id,)).fetchone()
-    farms = connection.execute("SELECT * FROM farms WHERE user_id = ?", (current_user_id(),)).fetchall()
-    fields = connection.execute("SELECT * FROM fields").fetchall()
     return render_template("edit_crop.html", crop=crop, farms=farms, fields=fields)
 
 
@@ -785,7 +804,9 @@ def edit_crop(crop_id):
 def delete_crop(crop_id):
     connection = get_database()
     try:
-        connection.execute("DELETE FROM crops WHERE crop_id = ?", (crop_id,))
+        connection.execute("""
+            DELETE FROM crops WHERE crop_id = ? AND farm_id IN (SELECT farm_id FROM farms WHERE user_id = ?)
+        """, (crop_id, current_user_id()))
         connection.commit()
     except sqlite3.IntegrityError:
         flash("Can't delete this crop — it still has activities or harvests linked to it. Delete those first.")
@@ -827,6 +848,16 @@ def add_soil_test():
 @login_required
 def edit_soil_test(test_id):
     connection = get_database()
+    user_id = current_user_id()
+    farms = connection.execute("SELECT * FROM farms WHERE user_id = ?", (user_id,)).fetchall()
+
+    test = connection.execute("""
+        SELECT * FROM soil_tests WHERE test_id = ? AND farm_id IN (SELECT farm_id FROM farms WHERE user_id = ?)
+    """, (test_id, user_id)).fetchone()
+
+    if test is None:
+        flash("Soil test not found.")
+        return redirect("/soil")
 
     if request.method == "POST":
         try:
@@ -837,26 +868,22 @@ def edit_soil_test(test_id):
             )
         except ValueError as e:
             flash(str(e))
-            test = connection.execute("SELECT * FROM soil_tests WHERE test_id = ?", (test_id,)).fetchone()
-            farms = connection.execute("SELECT * FROM farms WHERE user_id = ?", (current_user_id(),)).fetchall()
             return render_template("edit_soil_test.html", test=test, farms=farms)
 
         connection.execute("""
             UPDATE soil_tests SET
                 farm_id = ?, test_date = ?, soil_type = ?, ph = ?, nitrogen = ?,
                 phosphorus = ?, potassium = ?, organic_matter = ?, moisture = ?, notes = ?
-            WHERE test_id = ?
+            WHERE test_id = ? AND farm_id IN (SELECT farm_id FROM farms WHERE user_id = ?)
         """, (
             data["farm_id"], data["test_date"], data["soil_type"], data["ph"],
             data["nitrogen"], data["phosphorus"], data["potassium"],
-            data["organic_matter"], data["moisture"], data["notes"], test_id
+            data["organic_matter"], data["moisture"], data["notes"], test_id, user_id
         ))
         connection.commit()
 
         return redirect("/soil")
 
-    test = connection.execute("SELECT * FROM soil_tests WHERE test_id = ?", (test_id,)).fetchone()
-    farms = connection.execute("SELECT * FROM farms WHERE user_id = ?", (current_user_id(),)).fetchall()
     return render_template("edit_soil_test.html", test=test, farms=farms)
 
 
@@ -864,7 +891,9 @@ def edit_soil_test(test_id):
 @login_required
 def delete_soil_test(test_id):
     connection = get_database()
-    connection.execute("DELETE FROM soil_tests WHERE test_id = ?", (test_id,))
+    connection.execute("""
+        DELETE FROM soil_tests WHERE test_id = ? AND farm_id IN (SELECT farm_id FROM farms WHERE user_id = ?)
+    """, (test_id, current_user_id()))
     connection.commit()
     return redirect("/soil")
 @app.route("/add-activity", methods=["GET", "POST"])
@@ -915,6 +944,16 @@ def add_activity():
 @login_required
 def edit_activity(activity_id):
     connection = get_database()
+    user_id = current_user_id()
+    farms = connection.execute("SELECT * FROM farms WHERE user_id = ?", (user_id,)).fetchall()
+
+    activity = connection.execute("""
+        SELECT * FROM activities WHERE activity_id = ? AND farm_id IN (SELECT farm_id FROM farms WHERE user_id = ?)
+    """, (activity_id, user_id)).fetchone()
+
+    if activity is None:
+        flash("Activity not found.")
+        return redirect("/activities")
 
     if request.method == "POST":
         try:
@@ -924,25 +963,21 @@ def edit_activity(activity_id):
             )
         except ValueError as e:
             flash(str(e))
-            activity = connection.execute("SELECT * FROM activities WHERE activity_id = ?", (activity_id,)).fetchone()
-            farms = connection.execute("SELECT * FROM farms WHERE user_id = ?", (current_user_id(),)).fetchall()
             return render_template("edit_activity.html", activity=activity, farms=farms)
 
         connection.execute("""
             UPDATE activities SET
                 farm_id = ?, activity_date = ?, activity_type = ?, crop_name = ?,
                 input_used = ?, quantity = ?, notes = ?
-            WHERE activity_id = ?
+            WHERE activity_id = ? AND farm_id IN (SELECT farm_id FROM farms WHERE user_id = ?)
         """, (
             data["farm_id"], data["activity_date"], data["activity_type"], data["crop_name"],
-            data["input_used"], data["quantity"], data["notes"], activity_id
+            data["input_used"], data["quantity"], data["notes"], activity_id, user_id
         ))
         connection.commit()
 
         return redirect("/activities")
 
-    activity = connection.execute("SELECT * FROM activities WHERE activity_id = ?", (activity_id,)).fetchone()
-    farms = connection.execute("SELECT * FROM farms WHERE user_id = ?", (current_user_id(),)).fetchall()
     return render_template("edit_activity.html", activity=activity, farms=farms)
 
 
@@ -950,7 +985,9 @@ def edit_activity(activity_id):
 @login_required
 def delete_activity(activity_id):
     connection = get_database()
-    connection.execute("DELETE FROM activities WHERE activity_id = ?", (activity_id,))
+    connection.execute("""
+        DELETE FROM activities WHERE activity_id = ? AND farm_id IN (SELECT farm_id FROM farms WHERE user_id = ?)
+    """, (activity_id, current_user_id()))
     connection.commit()
     return redirect("/activities")
 
@@ -991,6 +1028,16 @@ def add_harvest():
 @login_required
 def edit_harvest(harvest_id):
     connection = get_database()
+    user_id = current_user_id()
+    farms = connection.execute("SELECT * FROM farms WHERE user_id = ?", (user_id,)).fetchall()
+
+    harvest = connection.execute("""
+        SELECT * FROM harvests WHERE harvest_id = ? AND farm_id IN (SELECT farm_id FROM farms WHERE user_id = ?)
+    """, (harvest_id, user_id)).fetchone()
+
+    if harvest is None:
+        flash("Harvest not found.")
+        return redirect("/harvests")
 
     if request.method == "POST":
         try:
@@ -1000,25 +1047,21 @@ def edit_harvest(harvest_id):
             )
         except ValueError as e:
             flash(str(e))
-            harvest = connection.execute("SELECT * FROM harvests WHERE harvest_id = ?", (harvest_id,)).fetchone()
-            farms = connection.execute("SELECT * FROM farms WHERE user_id = ?", (current_user_id(),)).fetchall()
             return render_template("edit_harvest.html", harvest=harvest, farms=farms)
 
         connection.execute("""
             UPDATE harvests SET
                 farm_id = ?, crop_name = ?, harvest_date = ?, quantity = ?,
                 unit = ?, quality = ?, notes = ?
-            WHERE harvest_id = ?
+            WHERE harvest_id = ? AND farm_id IN (SELECT farm_id FROM farms WHERE user_id = ?)
         """, (
             data["farm_id"], data["crop_name"], data["harvest_date"], data["quantity"],
-            data["unit"], data["quality"], data["notes"], harvest_id
+            data["unit"], data["quality"], data["notes"], harvest_id, user_id
         ))
         connection.commit()
 
         return redirect("/harvests")
 
-    harvest = connection.execute("SELECT * FROM harvests WHERE harvest_id = ?", (harvest_id,)).fetchone()
-    farms = connection.execute("SELECT * FROM farms WHERE user_id = ?", (current_user_id(),)).fetchall()
     return render_template("edit_harvest.html", harvest=harvest, farms=farms)
 
 
@@ -1027,7 +1070,9 @@ def edit_harvest(harvest_id):
 def delete_harvest(harvest_id):
     connection = get_database()
     try:
-        connection.execute("DELETE FROM harvests WHERE harvest_id = ?", (harvest_id,))
+        connection.execute("""
+            DELETE FROM harvests WHERE harvest_id = ? AND farm_id IN (SELECT farm_id FROM farms WHERE user_id = ?)
+        """, (harvest_id, current_user_id()))
         connection.commit()
     except sqlite3.IntegrityError:
         flash("Can't delete this harvest — it's linked to a product record. Delete that first.")
@@ -1070,6 +1115,20 @@ def add_product():
 @login_required
 def edit_product(product_id):
     connection = get_database()
+    user_id = current_user_id()
+    farms = connection.execute("SELECT * FROM farms WHERE user_id = ?", (user_id,)).fetchall()
+    harvests = connection.execute("""
+        SELECT * FROM harvests WHERE farm_id IN (SELECT farm_id FROM farms WHERE user_id = ?)
+        ORDER BY harvest_date DESC
+    """, (user_id,)).fetchall()
+
+    product = connection.execute("""
+        SELECT * FROM product_history WHERE product_id = ? AND farm_id IN (SELECT farm_id FROM farms WHERE user_id = ?)
+    """, (product_id, user_id)).fetchone()
+
+    if product is None:
+        flash("Product record not found.")
+        return redirect("/products")
 
     if request.method == "POST":
         try:
@@ -1079,28 +1138,22 @@ def edit_product(product_id):
             )
         except ValueError as e:
             flash(str(e))
-            product = connection.execute("SELECT * FROM product_history WHERE product_id = ?", (product_id,)).fetchone()
-            farms = connection.execute("SELECT * FROM farms WHERE user_id = ?", (current_user_id(),)).fetchall()
-            harvests = connection.execute("SELECT * FROM harvests ORDER BY harvest_date DESC").fetchall()
             return render_template("edit_product.html", product=product, farms=farms, harvests=harvests)
 
         connection.execute("""
             UPDATE product_history SET
                 farm_id = ?, crop_name = ?, harvest_id = ?, batch_number = ?,
                 product_date = ?, quantity = ?, unit = ?, destination = ?, notes = ?
-            WHERE product_id = ?
+            WHERE product_id = ? AND farm_id IN (SELECT farm_id FROM farms WHERE user_id = ?)
         """, (
             data["farm_id"], data["crop_name"], data["harvest_id"], data["batch_number"],
             data["product_date"], data["quantity"], data["unit"], data["destination"],
-            data["notes"], product_id
+            data["notes"], product_id, user_id
         ))
         connection.commit()
 
         return redirect("/products")
 
-    product = connection.execute("SELECT * FROM product_history WHERE product_id = ?", (product_id,)).fetchone()
-    farms = connection.execute("SELECT * FROM farms WHERE user_id = ?", (current_user_id(),)).fetchall()
-    harvests = connection.execute("SELECT * FROM harvests ORDER BY harvest_date DESC").fetchall()
     return render_template("edit_product.html", product=product, farms=farms, harvests=harvests)
 
 
@@ -1108,7 +1161,9 @@ def edit_product(product_id):
 @login_required
 def delete_product(product_id):
     connection = get_database()
-    connection.execute("DELETE FROM product_history WHERE product_id = ?", (product_id,))
+    connection.execute("""
+        DELETE FROM product_history WHERE product_id = ? AND farm_id IN (SELECT farm_id FROM farms WHERE user_id = ?)
+    """, (product_id, current_user_id()))
     connection.commit()
     return redirect("/")
 
