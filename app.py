@@ -710,7 +710,7 @@ def edit_field(field_id):
             flash(str(e))
             return render_template("edit_field.html", field=field, farms=farms)
 
-        if str(data["farm_id"]) not in [str(f["farm_id"]) for f in farms]:
+        if not user_owns_farm(data["farm_id"], user_id):
             flash("Invalid farm selected.")
             return render_template("edit_field.html", field=field, farms=farms)
 
@@ -829,11 +829,11 @@ def edit_crop(crop_id):
             flash(str(e))
             return render_template("edit_crop.html", crop=crop, farms=farms, fields=fields)
 
-        if str(data["farm_id"]) not in [str(f["farm_id"]) for f in farms]:
+        if not user_owns_farm(data["farm_id"], user_id):
             flash("Invalid farm selected.")
             return render_template("edit_crop.html", crop=crop, farms=farms, fields=fields)
 
-        if str(data["field_id"]) not in [str(f["field_id"]) for f in fields]:
+        if not user_owns_field(data["field_id"], user_id):
             flash("Invalid field selected.")
             return render_template("edit_crop.html", crop=crop, farms=farms, fields=fields)
 
@@ -930,7 +930,7 @@ def edit_soil_test(test_id):
             flash(str(e))
             return render_template("edit_soil_test.html", test=test, farms=farms)
 
-        if str(data["farm_id"]) not in [str(f["farm_id"]) for f in farms]:
+        if not user_owns_farm(data["farm_id"], user_id):
             flash("Invalid farm selected.")
             return render_template("edit_soil_test.html", test=test, farms=farms)
 
@@ -1039,7 +1039,7 @@ def edit_activity(activity_id):
             flash(str(e))
             return render_template("edit_activity.html", activity=activity, farms=farms)
 
-        if str(data["farm_id"]) not in [str(f["farm_id"]) for f in farms]:
+        if not user_owns_farm(data["farm_id"], user_id):
             flash("Invalid farm selected.")
             return render_template("edit_activity.html", activity=activity, farms=farms)
 
@@ -1057,8 +1057,6 @@ def edit_activity(activity_id):
         return redirect("/activities")
 
     return render_template("edit_activity.html", activity=activity, farms=farms)
-
-
 @app.route("/delete-activity/<int:activity_id>", methods=["POST"])
 @login_required
 def delete_activity(activity_id):
@@ -1132,7 +1130,7 @@ def edit_harvest(harvest_id):
             flash(str(e))
             return render_template("edit_harvest.html", harvest=harvest, farms=farms)
 
-        if str(data["farm_id"]) not in [str(f["farm_id"]) for f in farms]:
+        if not user_owns_farm(data["farm_id"], user_id):
             flash("Invalid farm selected.")
             return render_template("edit_harvest.html", harvest=harvest, farms=farms)
 
@@ -1241,11 +1239,11 @@ def edit_product(product_id):
             flash(str(e))
             return render_template("edit_product.html", product=product, farms=farms, harvests=harvests)
 
-        if str(data["farm_id"]) not in [str(f["farm_id"]) for f in farms]:
+        if not user_owns_farm(data["farm_id"], user_id):
             flash("Invalid farm selected.")
             return render_template("edit_product.html", product=product, farms=farms, harvests=harvests)
 
-        if str(data["harvest_id"]) not in [str(h["harvest_id"]) for h in harvests]:
+        if not user_owns_harvest(data["harvest_id"], user_id):
             flash("Invalid harvest selected.")
             return render_template("edit_product.html", product=product, farms=farms, harvests=harvests)
 
@@ -1419,9 +1417,11 @@ def settings():
             default_market_area_id = request.form.get("default_market_area_id") or None
             unit_system = request.form.get("unit_system")
 
-            if default_farm_id and not user_owns_farm(default_farm_id, user_id):
-                flash("Invalid default farm selected.")
-                return redirect("/settings")
+            if default_farm_id:
+                default_farm_id = int(default_farm_id)
+                if not user_owns_farm(default_farm_id, user_id):
+                    flash("Invalid default farm selected.")
+                    return redirect("/settings")
 
             connection.execute(
                 "UPDATE users SET default_farm_id = ?, default_market_area_id = ?, unit_system = ? WHERE user_id = ?",
