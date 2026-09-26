@@ -129,6 +129,42 @@ def login_required(view_func):
 def current_user_id():
     return session.get("user_id")
 
+
+def user_owns_farm(farm_id, user_id):
+    connection = get_database()
+    row = connection.execute(
+        "SELECT 1 FROM farms WHERE farm_id = ? AND user_id = ?", (farm_id, user_id)
+    ).fetchone()
+    return row is not None
+
+
+def user_owns_field(field_id, user_id):
+    connection = get_database()
+    row = connection.execute(
+        "SELECT 1 FROM fields WHERE field_id = ? AND farm_id IN (SELECT farm_id FROM farms WHERE user_id = ?)",
+        (field_id, user_id)
+    ).fetchone()
+    return row is not None
+
+
+def user_owns_crop(crop_id, user_id):
+    connection = get_database()
+    row = connection.execute(
+        "SELECT 1 FROM crops WHERE crop_id = ? AND farm_id IN (SELECT farm_id FROM farms WHERE user_id = ?)",
+        (crop_id, user_id)
+    ).fetchone()
+    return row is not None
+
+
+def user_owns_harvest(harvest_id, user_id):
+    connection = get_database()
+    row = connection.execute(
+        "SELECT 1 FROM harvests WHERE harvest_id = ? AND farm_id IN (SELECT farm_id FROM farms WHERE user_id = ?)",
+        (harvest_id, user_id)
+    ).fetchone()
+    return row is not None
+
+
 def crop_progress(planting_date, harvest_date):
     today = date.today()
     plant = date.fromisoformat(planting_date)
@@ -320,14 +356,13 @@ def summarize_daily_forecast(forecast_list):
             "rain_percent": rain_percent
         })
 
-    return summaries       
+    return summaries
 def check_weather_alerts(farm_id, user_id, lat, lon):
     """Checks the next 24-48h forecast and creates a notification if conditions warrant it."""
     forecast_list = get_forecast(lat, lon)
     if not forecast_list:
         return
 
-    # Look at the next 8 entries (~24 hours, since OpenWeatherMap gives 3-hour steps)
     upcoming = forecast_list[:8]
 
     heavy_rain = False
@@ -345,7 +380,6 @@ def check_weather_alerts(farm_id, user_id, lat, lon):
 
     connection = get_database()
 
-    # Avoid duplicate alerts: check if a similar alert was already sent in the last 12 hours
     recent = connection.execute("""
         SELECT COUNT(*) FROM notifications
         WHERE user_id = ? AND message LIKE '%weather alert%'
@@ -512,8 +546,8 @@ def home():
        market_insights=market_insights_data,
        daily_forecast=daily_forecast
     )
-  
-   
+
+
     return rendered
 @app.route("/market-insights")
 @login_required
@@ -639,6 +673,11 @@ def add_field():
             farms = connection.execute("SELECT * FROM farms WHERE user_id = ?", (current_user_id(),)).fetchall()
             return render_template("field.html", farms=farms)
 
+        if not user_owns_farm(data["farm_id"], current_user_id()):
+            flash("Invalid farm selected.")
+            farms = connection.execute("SELECT * FROM farms WHERE user_id = ?", (current_user_id(),)).fetchall()
+            return render_template("field.html", farms=farms)
+
         connection.execute("""
             INSERT INTO fields (farm_id, field_name, area_acres, soil_type, notes)
             VALUES (?, ?, ?, ?, ?)
@@ -722,6 +761,14 @@ def add_crop():
             """, (current_user_id(),)).fetchall()
             return render_template("add_crop.html", farms=farms, fields=fields)
 
+        if not user_owns_farm(data["farm_id"], current_user_id()) or not user_owns_field(data["field_id"], current_user_id()):
+            flash("Invalid farm or field selected.")
+            farms = connection.execute("SELECT * FROM farms WHERE user_id = ?", (current_user_id(),)).fetchall()
+            fields = connection.execute("""
+                SELECT * FROM fields WHERE farm_id IN (SELECT farm_id FROM farms WHERE user_id = ?)
+            """, (current_user_id(),)).fetchall()
+            return render_template("add_crop.html", farms=farms, fields=fields)
+
         connection.execute("""
             INSERT INTO crops
             (farm_id, field_id, crop_name, variety, planting_date,
@@ -782,6 +829,14 @@ def edit_crop(crop_id):
             flash(str(e))
             return render_template("edit_crop.html", crop=crop, farms=farms, fields=fields)
 
+        if str(data["farm_id"]) not in [str(f["farm_id"]) for f in farms]:
+            flash("Invalid farm selected.")
+            return render_template("edit_crop.html", crop=crop, farms=farms, fields=fields)
+
+        if str(data["field_id"]) not in [str(f["field_id"]) for f in fields]:
+            flash("Invalid field selected.")
+            return render_template("edit_crop.html", crop=crop, farms=farms, fields=fields)
+
         connection.execute("""
             UPDATE crops SET
                 farm_id = ?, field_id = ?, crop_name = ?, variety = ?,
@@ -828,6 +883,11 @@ def add_soil_test():
             farms = connection.execute("SELECT * FROM farms WHERE user_id = ?", (current_user_id(),)).fetchall()
             return render_template("soil_test.html", farms=farms)
 
+        if not user_owns_farm(data["farm_id"], current_user_id()):
+            flash("Invalid farm selected.")
+            farms = connection.execute("SELECT * FROM farms WHERE user_id = ?", (current_user_id(),)).fetchall()
+            return render_template("soil_test.html", farms=farms)
+
         connection.execute("""
             INSERT INTO soil_tests
             (farm_id, test_date, soil_type, ph, nitrogen,
@@ -870,6 +930,10 @@ def edit_soil_test(test_id):
             flash(str(e))
             return render_template("edit_soil_test.html", test=test, farms=farms)
 
+        if str(data["farm_id"]) not in [str(f["farm_id"]) for f in farms]:
+            flash("Invalid farm selected.")
+            return render_template("edit_soil_test.html", test=test, farms=farms)
+
         connection.execute("""
             UPDATE soil_tests SET
                 farm_id = ?, test_date = ?, soil_type = ?, ph = ?, nitrogen = ?,
@@ -909,6 +973,16 @@ def add_activity():
             )
         except ValueError as e:
             flash(str(e))
+            farms = connection.execute("SELECT * FROM farms WHERE user_id = ?", (current_user_id(),)).fetchall()
+            crops = connection.execute("""
+                SELECT c.*, f.field_name FROM crops c
+                LEFT JOIN fields f ON c.field_id = f.field_id
+                WHERE c.farm_id IN (SELECT farm_id FROM farms WHERE user_id = ?)
+            """, (current_user_id(),)).fetchall()
+            return render_template("activity.html", farms=farms, crops=crops)
+
+        if not user_owns_farm(data["farm_id"], current_user_id()) or not user_owns_crop(data["crop_id"], current_user_id()):
+            flash("Invalid farm or crop selected.")
             farms = connection.execute("SELECT * FROM farms WHERE user_id = ?", (current_user_id(),)).fetchall()
             crops = connection.execute("""
                 SELECT c.*, f.field_name FROM crops c
@@ -965,6 +1039,10 @@ def edit_activity(activity_id):
             flash(str(e))
             return render_template("edit_activity.html", activity=activity, farms=farms)
 
+        if str(data["farm_id"]) not in [str(f["farm_id"]) for f in farms]:
+            flash("Invalid farm selected.")
+            return render_template("edit_activity.html", activity=activity, farms=farms)
+
         connection.execute("""
             UPDATE activities SET
                 farm_id = ?, activity_date = ?, activity_type = ?, crop_name = ?,
@@ -1004,6 +1082,11 @@ def add_harvest():
             )
         except ValueError as e:
             flash(str(e))
+            farms = connection.execute("SELECT * FROM farms WHERE user_id = ?", (current_user_id(),)).fetchall()
+            return render_template("harvest.html", farms=farms)
+
+        if not user_owns_farm(data["farm_id"], current_user_id()):
+            flash("Invalid farm selected.")
             farms = connection.execute("SELECT * FROM farms WHERE user_id = ?", (current_user_id(),)).fetchall()
             return render_template("harvest.html", farms=farms)
 
@@ -1049,6 +1132,10 @@ def edit_harvest(harvest_id):
             flash(str(e))
             return render_template("edit_harvest.html", harvest=harvest, farms=farms)
 
+        if str(data["farm_id"]) not in [str(f["farm_id"]) for f in farms]:
+            flash("Invalid farm selected.")
+            return render_template("edit_harvest.html", harvest=harvest, farms=farms)
+
         connection.execute("""
             UPDATE harvests SET
                 farm_id = ?, crop_name = ?, harvest_date = ?, quantity = ?,
@@ -1077,7 +1164,6 @@ def delete_harvest(harvest_id):
     except sqlite3.IntegrityError:
         flash("Can't delete this harvest — it's linked to a product record. Delete that first.")
     return redirect("/harvests")
-
 @app.route("/add-product", methods=["GET", "POST"])
 @login_required
 def add_product():
@@ -1092,7 +1178,19 @@ def add_product():
         except ValueError as e:
             flash(str(e))
             farms = connection.execute("SELECT * FROM farms WHERE user_id = ?", (current_user_id(),)).fetchall()
-            harvests = connection.execute("SELECT * FROM harvests ORDER BY harvest_date DESC").fetchall()
+            harvests = connection.execute("""
+                SELECT * FROM harvests WHERE farm_id IN (SELECT farm_id FROM farms WHERE user_id = ?)
+                ORDER BY harvest_date DESC
+            """, (current_user_id(),)).fetchall()
+            return render_template("product.html", farms=farms, harvests=harvests)
+
+        if not user_owns_farm(data["farm_id"], current_user_id()) or not user_owns_harvest(data["harvest_id"], current_user_id()):
+            flash("Invalid farm or harvest selected.")
+            farms = connection.execute("SELECT * FROM farms WHERE user_id = ?", (current_user_id(),)).fetchall()
+            harvests = connection.execute("""
+                SELECT * FROM harvests WHERE farm_id IN (SELECT farm_id FROM farms WHERE user_id = ?)
+                ORDER BY harvest_date DESC
+            """, (current_user_id(),)).fetchall()
             return render_template("product.html", farms=farms, harvests=harvests)
 
         connection.execute("""
@@ -1109,7 +1207,10 @@ def add_product():
         return redirect("/products")
 
     farms = connection.execute("SELECT * FROM farms WHERE user_id = ?", (current_user_id(),)).fetchall()
-    harvests = connection.execute("SELECT * FROM harvests ORDER BY harvest_date DESC").fetchall()
+    harvests = connection.execute("""
+        SELECT * FROM harvests WHERE farm_id IN (SELECT farm_id FROM farms WHERE user_id = ?)
+        ORDER BY harvest_date DESC
+    """, (current_user_id(),)).fetchall()
     return render_template("product.html", farms=farms, harvests=harvests)
 @app.route("/edit-product/<int:product_id>", methods=["GET", "POST"])
 @login_required
@@ -1138,6 +1239,14 @@ def edit_product(product_id):
             )
         except ValueError as e:
             flash(str(e))
+            return render_template("edit_product.html", product=product, farms=farms, harvests=harvests)
+
+        if str(data["farm_id"]) not in [str(f["farm_id"]) for f in farms]:
+            flash("Invalid farm selected.")
+            return render_template("edit_product.html", product=product, farms=farms, harvests=harvests)
+
+        if str(data["harvest_id"]) not in [str(h["harvest_id"]) for h in harvests]:
+            flash("Invalid harvest selected.")
             return render_template("edit_product.html", product=product, farms=farms, harvests=harvests)
 
         connection.execute("""
@@ -1309,6 +1418,11 @@ def settings():
             default_farm_id = request.form.get("default_farm_id") or None
             default_market_area_id = request.form.get("default_market_area_id") or None
             unit_system = request.form.get("unit_system")
+
+            if default_farm_id and not user_owns_farm(default_farm_id, user_id):
+                flash("Invalid default farm selected.")
+                return redirect("/settings")
+
             connection.execute(
                 "UPDATE users SET default_farm_id = ?, default_market_area_id = ?, unit_system = ? WHERE user_id = ?",
                 (default_farm_id, default_market_area_id, unit_system, user_id)
