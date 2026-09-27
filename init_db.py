@@ -1,19 +1,33 @@
+#!/usr/bin/env python3
+"""Initialize the FTI Farm App database from schema.sql."""
+
+import os
 import sqlite3
+import sys
 
-connection = sqlite3.connect("farm.db")
+DATABASE = "farm.db"
 
-cursor = connection.cursor()
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS farms (
-    farm_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    farm_name TEXT NOT NULL,
-    location TEXT NOT NULL,
-    total_area_acres REAL NOT NULL
-)
-""")
+def init_database():
+    if not os.path.exists("schema.sql"):
+        print("Error: schema.sql not found in the current directory.")
+        sys.exit(1)
 
-connection.commit()
-connection.close()
+    connection = sqlite3.connect(DATABASE)
+    try:
+        connection.execute("PRAGMA foreign_keys = ON")
+        with open("schema.sql", encoding="utf-8") as schema_file:
+            connection.executescript(schema_file.read())
+        connection.commit()
+    except (OSError, sqlite3.Error) as error:
+        connection.rollback()
+        print(f"Database initialization failed: {error}")
+        sys.exit(1)
+    finally:
+        connection.close()
 
-print("🌱 Farm database initialized successfully!")
+    print("Farm database initialized successfully!")
+
+
+if __name__ == "__main__":
+    init_database()
