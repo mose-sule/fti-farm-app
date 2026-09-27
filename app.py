@@ -103,6 +103,8 @@ def login():
 def logout():
     session.clear()
     return redirect("/login")
+
+
 def form_data(*required_fields, optional=None):
     optional = optional or []
     data = {}
@@ -117,6 +119,8 @@ def form_data(*required_fields, optional=None):
     if missing:
         raise ValueError(f"Missing required field(s): {', '.join(missing)}")
     return data
+
+
 def login_required(view_func):
     @wraps(view_func)
     def wrapped(*args, **kwargs):
@@ -131,6 +135,10 @@ def current_user_id():
 
 
 def user_owns_farm(farm_id, user_id):
+    try:
+        farm_id = int(farm_id)
+    except (TypeError, ValueError):
+        return False
     connection = get_database()
     row = connection.execute(
         "SELECT 1 FROM farms WHERE farm_id = ? AND user_id = ?", (farm_id, user_id)
@@ -139,6 +147,10 @@ def user_owns_farm(farm_id, user_id):
 
 
 def user_owns_field(field_id, user_id):
+    try:
+        field_id = int(field_id)
+    except (TypeError, ValueError):
+        return False
     connection = get_database()
     row = connection.execute(
         "SELECT 1 FROM fields WHERE field_id = ? AND farm_id IN (SELECT farm_id FROM farms WHERE user_id = ?)",
@@ -148,6 +160,10 @@ def user_owns_field(field_id, user_id):
 
 
 def user_owns_crop(crop_id, user_id):
+    try:
+        crop_id = int(crop_id)
+    except (TypeError, ValueError):
+        return False
     connection = get_database()
     row = connection.execute(
         "SELECT 1 FROM crops WHERE crop_id = ? AND farm_id IN (SELECT farm_id FROM farms WHERE user_id = ?)",
@@ -157,10 +173,26 @@ def user_owns_crop(crop_id, user_id):
 
 
 def user_owns_harvest(harvest_id, user_id):
+    try:
+        harvest_id = int(harvest_id)
+    except (TypeError, ValueError):
+        return False
     connection = get_database()
     row = connection.execute(
         "SELECT 1 FROM harvests WHERE harvest_id = ? AND farm_id IN (SELECT farm_id FROM farms WHERE user_id = ?)",
         (harvest_id, user_id)
+    ).fetchone()
+    return row is not None
+
+
+def market_area_exists(market_area_id):
+    try:
+        market_area_id = int(market_area_id)
+    except (TypeError, ValueError):
+        return False
+    connection = get_database()
+    row = connection.execute(
+        "SELECT 1 FROM market_areas WHERE market_area_id = ?", (market_area_id,)
     ).fetchone()
     return row is not None
 
@@ -197,6 +229,8 @@ def time_ago(date_str):
         return "1 week ago"
     else:
         return f"{delta_days // 7} weeks ago"
+
+
 def get_market_insights(market_area_id):
     """Returns a list of {crop_name, count, percent} for all growing crops
     in farms sharing this market area, sorted by percent descending."""
@@ -230,6 +264,8 @@ def get_market_insights(market_area_id):
         })
 
     return insights
+
+
 OPENWEATHER_API_KEY = os.environ.get("OPENWEATHER_API_KEY")
 CROP_ICONS = {
     "potato": "🥔", "potatoes": "🥔",
@@ -255,6 +291,8 @@ def get_crop_icon(crop_name):
             return icon
     return "🌱"
 app.jinja_env.filters['crop_icon'] = get_crop_icon
+
+
 def get_notification_icon(message):
     if not message:
         return "🔔"
@@ -271,6 +309,8 @@ def get_notification_icon(message):
     return "🔔"
 
 app.jinja_env.filters['notification_icon'] = get_notification_icon
+
+
 ACTIVITY_ICONS = {
     "fertilizer": "🧪", "fertilizer application": "🧪",
     "irrigation": "💧", "watering": "💧",
@@ -289,6 +329,8 @@ def get_activity_icon(activity_type):
     return "📋"
 
 app.jinja_env.filters['activity_icon'] = get_activity_icon
+
+
 def get_weather(lat, lon):
     try:
         url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&units=metric&appid={OPENWEATHER_API_KEY}"
@@ -357,6 +399,8 @@ def summarize_daily_forecast(forecast_list):
         })
 
     return summaries
+
+
 def check_weather_alerts(farm_id, user_id, lat, lon):
     """Checks the next 24-48h forecast and creates a notification if conditions warrant it."""
     forecast_list = get_forecast(lat, lon)
@@ -395,6 +439,8 @@ def check_weather_alerts(farm_id, user_id, lat, lon):
         create_notification(user_id, "⚠️ Weather alert: Strong winds expected in the next 24 hours.")
     elif min_temp <= 5:
         create_notification(user_id, "⚠️ Weather alert: Low temperatures expected — frost risk for sensitive crops.")
+
+
 @app.route("/notifications")
 @login_required
 def notifications():
@@ -409,6 +455,8 @@ def notifications():
     connection.commit()
 
     return render_template("notifications.html", notifications=notes)
+
+
 def create_notification(user_id, message):
     connection = get_database()
     connection.execute(
@@ -416,6 +464,8 @@ def create_notification(user_id, message):
         (user_id, message)
     )
     connection.commit()
+
+
 @app.route("/")
 @login_required
 def home():
@@ -549,6 +599,8 @@ def home():
 
 
     return rendered
+
+
 @app.route("/market-insights")
 @login_required
 def market_insights():
@@ -568,6 +620,8 @@ def market_insights():
     insights = get_market_insights(farm["market_area_id"])
 
     return render_template("market_insights.html", insights=insights, market_area=market_area)
+
+
 @app.route("/api/weather")
 @login_required
 def api_weather():
@@ -581,6 +635,8 @@ def api_weather():
         return {"error": "weather unavailable"}, 500
 
     return weather
+
+
 @app.route("/add-farm", methods=["GET", "POST"])
 @login_required
 def add_farm():
@@ -591,6 +647,11 @@ def add_farm():
             data = form_data("farm_name", "location", "area", "market_area_id", optional=["latitude", "longitude"])
         except ValueError as e:
             flash(str(e))
+            market_areas = connection.execute("SELECT * FROM market_areas").fetchall()
+            return render_template("add_farm.html", market_areas=market_areas)
+
+        if not market_area_exists(data["market_area_id"]):
+            flash("Invalid market area selected.")
             market_areas = connection.execute("SELECT * FROM market_areas").fetchall()
             return render_template("add_farm.html", market_areas=market_areas)
 
@@ -607,6 +668,8 @@ def add_farm():
 
     market_areas = connection.execute("SELECT * FROM market_areas").fetchall()
     return render_template("add_farm.html", market_areas=market_areas)
+
+
 @app.route("/edit-farm/<int:farm_id>", methods=["GET", "POST"])
 @login_required
 def edit_farm(farm_id):
@@ -617,6 +680,12 @@ def edit_farm(farm_id):
             data = form_data("farm_name", "location", "area", "market_area_id")
         except ValueError as e:
             flash(str(e))
+            farm = connection.execute("SELECT * FROM farms WHERE farm_id = ?", (farm_id,)).fetchone()
+            market_areas = connection.execute("SELECT * FROM market_areas").fetchall()
+            return render_template("edit_farm.html", farm=farm, market_areas=market_areas)
+
+        if not market_area_exists(data["market_area_id"]):
+            flash("Invalid market area selected.")
             farm = connection.execute("SELECT * FROM farms WHERE farm_id = ?", (farm_id,)).fetchone()
             market_areas = connection.execute("SELECT * FROM market_areas").fetchall()
             return render_template("edit_farm.html", farm=farm, market_areas=market_areas)
@@ -652,6 +721,8 @@ def delete_farm(farm_id):
     except sqlite3.IntegrityError:
         flash("Can't delete this farm — it still has fields, crops, or other records linked to it. Delete those first.")
     return redirect("/farms")
+
+
 @app.route("/farm-map/<int:farm_id>")
 @login_required
 def farm_map(farm_id):
@@ -660,6 +731,8 @@ def farm_map(farm_id):
         "SELECT * FROM farms WHERE farm_id = ? AND user_id = ?", (farm_id, current_user_id())
     ).fetchone()
     return render_template("farm_map.html", farm=farm)
+
+
 @app.route("/add-field", methods=["GET", "POST"])
 @login_required
 def add_field():
@@ -688,6 +761,8 @@ def add_field():
 
     farms = connection.execute("SELECT * FROM farms WHERE user_id = ?", (current_user_id(),)).fetchall()
     return render_template("field.html", farms=farms)
+
+
 @app.route("/edit-field/<int:field_id>", methods=["GET", "POST"])
 @login_required
 def edit_field(field_id):
@@ -741,6 +816,7 @@ def delete_field(field_id):
     except sqlite3.IntegrityError:
         flash("Can't delete this field — it still has crops or soil tests linked to it. Delete those first.")
     return redirect("/fields")
+
 
 @app.route("/add-crop", methods=["GET", "POST"])
 @login_required
@@ -800,6 +876,7 @@ def add_crop():
         insights = get_market_insights(farm["market_area_id"])
 
     return render_template("add_crop.html", farms=farms, fields=fields, insights=insights)
+
 
 @app.route("/edit-crop/<int:crop_id>", methods=["GET", "POST"])
 @login_required
@@ -866,6 +943,8 @@ def delete_crop(crop_id):
     except sqlite3.IntegrityError:
         flash("Can't delete this crop — it still has activities or harvests linked to it. Delete those first.")
     return redirect("/crops")
+
+
 @app.route("/add-soil-test", methods=["GET", "POST"])
 @login_required
 def add_soil_test():
@@ -904,6 +983,8 @@ def add_soil_test():
 
     farms = connection.execute("SELECT * FROM farms WHERE user_id = ?", (current_user_id(),)).fetchall()
     return render_template("soil_test.html", farms=farms)
+
+
 @app.route("/edit-soil-test/<int:test_id>", methods=["GET", "POST"])
 @login_required
 def edit_soil_test(test_id):
@@ -960,6 +1041,8 @@ def delete_soil_test(test_id):
     """, (test_id, current_user_id()))
     connection.commit()
     return redirect("/soil")
+
+
 @app.route("/add-activity", methods=["GET", "POST"])
 @login_required
 def add_activity():
@@ -1014,6 +1097,8 @@ def add_activity():
         WHERE c.farm_id IN (SELECT farm_id FROM farms WHERE user_id = ?)
     """, (current_user_id(),)).fetchall()
     return render_template("activity.html", farms=farms, crops=crops)
+
+
 @app.route("/edit-activity/<int:activity_id>", methods=["GET", "POST"])
 @login_required
 def edit_activity(activity_id):
@@ -1028,206 +1113,6 @@ def edit_activity(activity_id):
     if activity is None:
         flash("Activity not found.")
         return redirect("/activities")
-
-    if request.method == "POST":
-        try:
-            data = form_data(
-                "farm_id", "activity_date", "activity_type", "crop_name",
-                optional=["input_used", "quantity", "notes"]
-            )
-        except ValueError as e:
-            flash(str(e))
-            return render_template("edit_activity.html", activity=activity, farms=farms)
-
-        if not user_owns_farm(data["farm_id"], user_id):
-            flash("Invalid farm selected.")
-            return render_template("edit_activity.html", activity=activity, farms=farms)
-
-        connection.execute("""
-            UPDATE activities SET
-                farm_id = ?, activity_date = ?, activity_type = ?, crop_name = ?,
-                input_used = ?, quantity = ?, notes = ?
-            WHERE activity_id = ? AND farm_id IN (SELECT farm_id FROM farms WHERE user_id = ?)
-        """, (
-            data["farm_id"], data["activity_date"], data["activity_type"], data["crop_name"],
-            data["input_used"], data["quantity"], data["notes"], activity_id, user_id
-        ))
-        connection.commit()
-
-        return redirect("/activities")
-
-    return render_template("edit_activity.html", activity=activity, farms=farms)
-@app.route("/delete-activity/<int:activity_id>", methods=["POST"])
-@login_required
-def delete_activity(activity_id):
-    connection = get_database()
-    connection.execute("""
-        DELETE FROM activities WHERE activity_id = ? AND farm_id IN (SELECT farm_id FROM farms WHERE user_id = ?)
-    """, (activity_id, current_user_id()))
-    connection.commit()
-    return redirect("/activities")
-
-@app.route("/add-harvest", methods=["GET", "POST"])
-@login_required
-def add_harvest():
-    connection = get_database()
-
-    if request.method == "POST":
-        try:
-            data = form_data(
-                "farm_id", "crop_name", "harvest_date", "quantity",
-                "unit", "quality", optional=["notes"]
-            )
-        except ValueError as e:
-            flash(str(e))
-            farms = connection.execute("SELECT * FROM farms WHERE user_id = ?", (current_user_id(),)).fetchall()
-            return render_template("harvest.html", farms=farms)
-
-        if not user_owns_farm(data["farm_id"], current_user_id()):
-            flash("Invalid farm selected.")
-            farms = connection.execute("SELECT * FROM farms WHERE user_id = ?", (current_user_id(),)).fetchall()
-            return render_template("harvest.html", farms=farms)
-
-        connection.execute("""
-            INSERT INTO harvests
-            (farm_id, crop_name, harvest_date, quantity, unit, quality, notes)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (
-            data["farm_id"], data["crop_name"], data["harvest_date"],
-            data["quantity"], data["unit"], data["quality"], data["notes"]
-        ))
-        connection.commit()
-        create_notification(
-            current_user_id(),
-            f"Harvest recorded: {data['quantity']} {data['unit']} of {data['crop_name']}."
-        )
-        return redirect("/harvests")
-
-    farms = connection.execute("SELECT * FROM farms WHERE user_id = ?", (current_user_id(),)).fetchall()
-    return render_template("harvest.html", farms=farms)
-@app.route("/edit-harvest/<int:harvest_id>", methods=["GET", "POST"])
-@login_required
-def edit_harvest(harvest_id):
-    connection = get_database()
-    user_id = current_user_id()
-    farms = connection.execute("SELECT * FROM farms WHERE user_id = ?", (user_id,)).fetchall()
-
-    harvest = connection.execute("""
-        SELECT * FROM harvests WHERE harvest_id = ? AND farm_id IN (SELECT farm_id FROM farms WHERE user_id = ?)
-    """, (harvest_id, user_id)).fetchone()
-
-    if harvest is None:
-        flash("Harvest not found.")
-        return redirect("/harvests")
-
-    if request.method == "POST":
-        try:
-            data = form_data(
-                "farm_id", "crop_name", "harvest_date", "quantity",
-                "unit", "quality", optional=["notes"]
-            )
-        except ValueError as e:
-            flash(str(e))
-            return render_template("edit_harvest.html", harvest=harvest, farms=farms)
-
-        if not user_owns_farm(data["farm_id"], user_id):
-            flash("Invalid farm selected.")
-            return render_template("edit_harvest.html", harvest=harvest, farms=farms)
-
-        connection.execute("""
-            UPDATE harvests SET
-                farm_id = ?, crop_name = ?, harvest_date = ?, quantity = ?,
-                unit = ?, quality = ?, notes = ?
-            WHERE harvest_id = ? AND farm_id IN (SELECT farm_id FROM farms WHERE user_id = ?)
-        """, (
-            data["farm_id"], data["crop_name"], data["harvest_date"], data["quantity"],
-            data["unit"], data["quality"], data["notes"], harvest_id, user_id
-        ))
-        connection.commit()
-
-        return redirect("/harvests")
-
-    return render_template("edit_harvest.html", harvest=harvest, farms=farms)
-
-
-@app.route("/delete-harvest/<int:harvest_id>", methods=["POST"])
-@login_required
-def delete_harvest(harvest_id):
-    connection = get_database()
-    try:
-        connection.execute("""
-            DELETE FROM harvests WHERE harvest_id = ? AND farm_id IN (SELECT farm_id FROM farms WHERE user_id = ?)
-        """, (harvest_id, current_user_id()))
-        connection.commit()
-    except sqlite3.IntegrityError:
-        flash("Can't delete this harvest — it's linked to a product record. Delete that first.")
-    return redirect("/harvests")
-@app.route("/add-product", methods=["GET", "POST"])
-@login_required
-def add_product():
-    connection = get_database()
-
-    if request.method == "POST":
-        try:
-            data = form_data(
-                "farm_id", "crop_name", "harvest_id", "batch_number",
-                "product_date", "quantity", "unit", "destination", optional=["notes"]
-            )
-        except ValueError as e:
-            flash(str(e))
-            farms = connection.execute("SELECT * FROM farms WHERE user_id = ?", (current_user_id(),)).fetchall()
-            harvests = connection.execute("""
-                SELECT * FROM harvests WHERE farm_id IN (SELECT farm_id FROM farms WHERE user_id = ?)
-                ORDER BY harvest_date DESC
-            """, (current_user_id(),)).fetchall()
-            return render_template("product.html", farms=farms, harvests=harvests)
-
-        if not user_owns_farm(data["farm_id"], current_user_id()) or not user_owns_harvest(data["harvest_id"], current_user_id()):
-            flash("Invalid farm or harvest selected.")
-            farms = connection.execute("SELECT * FROM farms WHERE user_id = ?", (current_user_id(),)).fetchall()
-            harvests = connection.execute("""
-                SELECT * FROM harvests WHERE farm_id IN (SELECT farm_id FROM farms WHERE user_id = ?)
-                ORDER BY harvest_date DESC
-            """, (current_user_id(),)).fetchall()
-            return render_template("product.html", farms=farms, harvests=harvests)
-
-        connection.execute("""
-            INSERT INTO product_history
-            (farm_id, crop_name, harvest_id, batch_number,
-             product_date, quantity, unit, destination, notes)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            data["farm_id"], data["crop_name"], data["harvest_id"], data["batch_number"],
-            data["product_date"], data["quantity"], data["unit"], data["destination"], data["notes"]
-        ))
-        connection.commit()
-
-        return redirect("/products")
-
-    farms = connection.execute("SELECT * FROM farms WHERE user_id = ?", (current_user_id(),)).fetchall()
-    harvests = connection.execute("""
-        SELECT * FROM harvests WHERE farm_id IN (SELECT farm_id FROM farms WHERE user_id = ?)
-        ORDER BY harvest_date DESC
-    """, (current_user_id(),)).fetchall()
-    return render_template("product.html", farms=farms, harvests=harvests)
-@app.route("/edit-product/<int:product_id>", methods=["GET", "POST"])
-@login_required
-def edit_product(product_id):
-    connection = get_database()
-    user_id = current_user_id()
-    farms = connection.execute("SELECT * FROM farms WHERE user_id = ?", (user_id,)).fetchall()
-    harvests = connection.execute("""
-        SELECT * FROM harvests WHERE farm_id IN (SELECT farm_id FROM farms WHERE user_id = ?)
-        ORDER BY harvest_date DESC
-    """, (user_id,)).fetchall()
-
-    product = connection.execute("""
-        SELECT * FROM product_history WHERE product_id = ? AND farm_id IN (SELECT farm_id FROM farms WHERE user_id = ?)
-    """, (product_id, user_id)).fetchone()
-
-    if product is None:
-        flash("Product record not found.")
-        return redirect("/products")
 
     if request.method == "POST":
         try:
@@ -1273,6 +1158,7 @@ def delete_product(product_id):
     """, (product_id, current_user_id()))
     connection.commit()
     return redirect("/")
+
 
 @app.route("/farms")
 @login_required
@@ -1359,6 +1245,8 @@ def products():
         ORDER BY product_date DESC
     """, (current_user_id(),)).fetchall()
     return render_template("products.html", products=products)
+
+
 @app.route("/profile")
 @login_required
 def profile():
@@ -1370,6 +1258,8 @@ def profile():
         "SELECT COUNT(*) FROM farms WHERE user_id = ?", (current_user_id(),)
     ).fetchone()[0]
     return render_template("profile.html", user=user, farm_count=farm_count)
+
+
 @app.route("/settings", methods=["GET", "POST"])
 @login_required
 def settings():
@@ -1441,6 +1331,8 @@ def settings():
     market_areas = connection.execute("SELECT * FROM market_areas").fetchall()
 
     return render_template("settings.html", user=user, farms=farms, market_areas=market_areas)
+
+
 @app.route("/help")
 @login_required
 def help_page():
@@ -1476,6 +1368,8 @@ def switch_farm():
         "SELECT * FROM farms WHERE user_id = ?", (current_user_id(),)
     ).fetchall()
     return render_template("switch_farm.html", farms=farms)
+
+
 @app.route("/reports")
 @login_required
 def reports():
@@ -1516,6 +1410,33 @@ def reports():
         total_soil_tests=total_soil_tests,
         recent_harvests=recent_harvests
     )
+
+
+@app.route("/weather-alerts")
+@login_required
+def weather_alerts():
+    connection = get_database()
+    user_id = current_user_id()
+
+    alerts = connection.execute("""
+        SELECT * FROM notifications
+        WHERE user_id = ? AND message LIKE '%Weather alert%'
+        ORDER BY created_at DESC
+        LIMIT 30
+    """, (user_id,)).fetchall()
+
+    farm_with_location = connection.execute("""
+        SELECT * FROM farms WHERE user_id = ? AND latitude IS NOT NULL LIMIT 1
+    """, (user_id,)).fetchone()
+
+    current_forecast = []
+    if farm_with_location:
+        current_forecast = summarize_daily_forecast(
+            get_forecast(farm_with_location["latitude"], farm_with_location["longitude"])
+        )
+
+    return render_template("weather_alerts.html", alerts=alerts, daily_forecast=current_forecast)
+
 
 if __name__ == "__main__":
     app.run(debug=False)
