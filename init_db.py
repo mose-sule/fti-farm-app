@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Initialize the FTI Farm App database from schema.sql."""
+"""Initialize the FTI database from the authoritative schema.sql."""
 
 import os
 import sqlite3
@@ -9,8 +9,8 @@ DATABASE = "farm.db"
 
 
 def init_database():
-    if not os.path.exists("schema.sql"):
-        print("Error: schema.sql not found in the current directory.")
+    if not os.path.isfile("schema.sql"):
+        print("Error: schema.sql not found.")
         sys.exit(1)
 
     connection = sqlite3.connect(DATABASE)
@@ -26,7 +26,7 @@ def init_database():
     finally:
         connection.close()
 
-    print("Farm database initialized successfully!")
+    print("🌱 Farm database initialized successfully!")
 
 
 if __name__ == "__main__":
