@@ -4,3 +4,5 @@ __pycache__/
 *.pyc
 server_log.txt
 cookies.txt
+backups/
+farm.db.*

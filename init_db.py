@@ -2,6 +2,8 @@
 """Initialize the FTI database from the authoritative schema.sql."""
 
 import os
+import shutil
+import time
 import sqlite3
 import sys
 
@@ -12,6 +14,15 @@ def init_database():
     if not os.path.isfile("schema.sql"):
         print("Error: schema.sql not found.")
         sys.exit(1)
+
+    if os.path.isfile(DATABASE) and os.path.getsize(DATABASE) > 0:
+        if "--force" not in sys.argv:
+            print("Refusing to run: farm.db already exists and this would ERASE it.")
+            print("To really start over, run: python init_db.py --force")
+            sys.exit(1)
+        backup = DATABASE + ".before-reset-" + time.strftime("%Y%m%d-%H%M%S")
+        shutil.copy2(DATABASE, backup)
+        print("Backup saved to " + backup)
 
     connection = sqlite3.connect(DATABASE)
     try:

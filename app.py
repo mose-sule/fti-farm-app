@@ -19,6 +19,21 @@ app.config.update(
     SESSION_COOKIE_SAMESITE="Lax",
 )
 DATABASE = "farm.db"
+
+
+def backup_database():
+    import glob, os, shutil, time
+    if not os.path.isfile(DATABASE):
+        return
+    os.makedirs("backups", exist_ok=True)
+    target = "backups/farm-" + time.strftime("%Y%m%d") + ".db"
+    if not os.path.exists(target):
+        shutil.copy2(DATABASE, target)
+    for old in sorted(glob.glob("backups/farm-*.db"))[:-14]:
+        os.remove(old)
+
+
+backup_database()
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 
@@ -831,8 +846,8 @@ def add_farm():
                 ).fetchone()
                 if area_row is None:
                     raise ValueError("Invalid market area selected.")
-            latitude = parse_optional_int(data["latitude"]) if data["latitude"] else None
-            longitude = parse_optional_int(data["longitude"]) if data["longitude"] else None
+            latitude = require_float(data["latitude"], "latitude") if data["latitude"] else None
+            longitude = require_float(data["longitude"], "longitude") if data["longitude"] else None
             if latitude is not None and not (-90 <= latitude <= 90):
                 raise ValueError("Latitude must be between -90 and 90.")
             if longitude is not None and not (-180 <= longitude <= 180):
