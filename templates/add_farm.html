@@ -4,7 +4,7 @@
 
 <h1 style="font-size:20px; margin-bottom:16px;">Add Farm</h1>
 
-<form method="POST" action="/add-farm" class="card" id="farmForm">
+<form method="POST" action="/add-farm" class="card" id="farmForm"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <input type="hidden" name="latitude" id="latitude">
     <input type="hidden" name="longitude" id="longitude">
 <div style="margin-bottom:14px;">

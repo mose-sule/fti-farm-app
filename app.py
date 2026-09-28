@@ -3,7 +3,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from flask import Flask, render_template, request, redirect, g, flash, session
+import secrets
+from flask import Flask, render_template, request, redirect, g, flash, session, abort
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 import sqlite3
@@ -18,6 +19,26 @@ app.config.update(
     SESSION_COOKIE_SAMESITE="Lax",
 )
 DATABASE = "farm.db"
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+
+
+def csrf_token():
+    if "csrf_token" not in session:
+        session["csrf_token"] = secrets.token_urlsafe(32)
+    return session["csrf_token"]
+
+
+app.jinja_env.globals["csrf_token"] = csrf_token
+
+
+@app.before_request
+def validate_csrf():
+    if request.method == "POST":
+        expected = session.get("csrf_token", "")
+        submitted = request.form.get("csrf_token", "")
+        if not expected or not secrets.compare_digest(expected.encode(), submitted.encode()):
+            abort(400)
 
 
 # ---------- DB helpers ----------

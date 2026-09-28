@@ -15,7 +15,7 @@
       {% endif %}
     {% endwith %}
 
-    <form method="POST" action="/feedback">
+    <form method="POST" action="/feedback"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div style="margin-bottom:14px;">
             <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">What's on your mind?</label>
             <textarea name="message" rows="5" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; font-family:inherit;"></textarea>

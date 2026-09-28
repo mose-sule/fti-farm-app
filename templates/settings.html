@@ -16,7 +16,7 @@
 
 <div class="card">
     <div class="card-header"><h2>Notifications</h2></div>
-    <form method="POST" action="/settings">
+    <form method="POST" action="/settings"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="form_type" value="notifications">
         <label style="display:flex; align-items:center; justify-content:space-between; font-size:14px; padding:6px 0;">
             <span>
@@ -31,7 +31,7 @@
 
 <div class="card">
     <div class="card-header"><h2>Preferences</h2></div>
-    <form method="POST" action="/settings">
+    <form method="POST" action="/settings"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="form_type" value="preferences">
 
         <div style="margin-bottom:14px;">
@@ -68,7 +68,7 @@
 
 <div class="card">
     <div class="card-header"><h2>Change Password</h2></div>
-    <form method="POST" action="/settings">
+    <form method="POST" action="/settings"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="form_type" value="password">
         <div style="margin-bottom:14px;">
             <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px;">Current Password</label>

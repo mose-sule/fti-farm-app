@@ -26,7 +26,7 @@
         {% if test.notes %}<div class="item-meta" style="margin-top:8px;">{{ test.notes }}</div>{% endif %}
         <div class="item-actions">
             <a href="/edit-soil-test/{{ test.test_id }}" class="btn btn-white" style="flex:1; text-align:center; border:1px solid #2f7a3f;">Edit</a>
-            <form method="POST" action="/delete-soil-test/{{ test.test_id }}" style="flex:1;" onsubmit="return confirm('Delete this soil test?');">
+            <form method="POST" action="/delete-soil-test/{{ test.test_id }}" style="flex:1;" onsubmit="return confirm('Delete this soil test?');"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" style="width:100%; background:#fed7d7; color:#9b2c2c; border:none; padding:10px; border-radius:10px; font-weight:600; font-size:14px;">Delete</button>
             </form>
         </div>

@@ -1,3 +1,5 @@
+PRAGMA foreign_keys = ON;
+
 DROP TABLE IF EXISTS product_history;
 DROP TABLE IF EXISTS harvests;
 DROP TABLE IF EXISTS activities;
@@ -5,25 +7,21 @@ DROP TABLE IF EXISTS soil_tests;
 DROP TABLE IF EXISTS crops;
 DROP TABLE IF EXISTS fields;
 DROP TABLE IF EXISTS farms;
-
+DROP TABLE IF EXISTS notifications;
 DROP TABLE IF EXISTS market_areas;
 DROP TABLE IF EXISTS users;
-DROP TABLE IF EXISTS notifications;
 
-CREATE TABLE notifications (
-    notification_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL REFERENCES users(user_id),
-    message TEXT NOT NULL,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    is_read INTEGER DEFAULT 0
-);
 CREATE TABLE users (
     user_id INTEGER PRIMARY KEY AUTOINCREMENT,
     full_name TEXT NOT NULL,
     email TEXT NOT NULL UNIQUE,
     phone TEXT,
     password_hash TEXT NOT NULL,
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    weather_alerts_enabled INTEGER NOT NULL DEFAULT 0,
+    default_farm_id INTEGER,
+    default_market_area_id INTEGER,
+    unit_system TEXT NOT NULL DEFAULT 'metric'
 );
 
 CREATE TABLE market_areas (
@@ -31,21 +29,16 @@ CREATE TABLE market_areas (
     area_name TEXT NOT NULL,
     region TEXT
 );
+
 CREATE TABLE farms (
     farm_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER REFERENCES users(user_id),
+    user_id INTEGER NOT NULL REFERENCES users(user_id),
     market_area_id INTEGER REFERENCES market_areas(market_area_id),
     farm_name TEXT NOT NULL,
     location TEXT,
-    total_area_acres REAL
+    total_area_acres REAL,
     latitude REAL,
-    longitude REAL,
-```//add these anywhere inside the parentheses, e.g. right after `location TEXT,`
-
-**2. Add a weather helper function to `app.py`.** Open it:
-
-```bash
-nano app.py
+    longitude REAL
 );
 
 CREATE TABLE fields (
@@ -66,7 +59,7 @@ CREATE TABLE crops (
     planting_date TEXT NOT NULL,
     expected_harvest_date TEXT NOT NULL,
     area_acres REAL,
-    status TEXT DEFAULT 'growing'
+    status TEXT NOT NULL DEFAULT 'growing'
 );
 
 CREATE TABLE soil_tests (
@@ -120,3 +113,20 @@ CREATE TABLE product_history (
     destination TEXT,
     notes TEXT
 );
+
+CREATE TABLE notifications (
+    notification_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(user_id),
+    message TEXT NOT NULL,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    is_read INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE INDEX idx_farms_user_id ON farms(user_id);
+CREATE INDEX idx_fields_farm_id ON fields(farm_id);
+CREATE INDEX idx_crops_farm_id ON crops(farm_id);
+CREATE INDEX idx_soil_tests_farm_id ON soil_tests(farm_id);
+CREATE INDEX idx_activities_farm_id ON activities(farm_id);
+CREATE INDEX idx_harvests_farm_id ON harvests(farm_id);
+CREATE INDEX idx_products_farm_id ON product_history(farm_id);
+CREATE INDEX idx_notifications_user_id ON notifications(user_id);

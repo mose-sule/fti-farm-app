@@ -20,7 +20,7 @@
         <div class="item-meta">📐 {{ crop.area_acres }} acres</div>
         <div class="item-actions">
             <a href="/edit-crop/{{ crop.crop_id }}" class="btn btn-white" style="flex:1; text-align:center; border:1px solid #2f7a3f;">Edit</a>
-            <form method="POST" action="/delete-crop/{{ crop.crop_id }}" style="flex:1;" onsubmit="return confirm('Delete this crop?');">
+            <form method="POST" action="/delete-crop/{{ crop.crop_id }}" style="flex:1;" onsubmit="return confirm('Delete this crop?');"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" style="width:100%; background:#fed7d7; color:#9b2c2c; border:none; padding:10px; border-radius:10px; font-weight:600; font-size:14px;">Delete</button>
             </form>
         </div>
