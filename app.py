@@ -768,7 +768,8 @@ def home():
         recent_activities=recent_activities,
         weather=weather,
         market_insights=market_insights_data,
-        daily_forecast=daily_forecast,
+            daily_forecast=daily_forecast,
+        farm_location=farm_with_location,
     )
 
 
