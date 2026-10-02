@@ -12,10 +12,13 @@ from datetime import date, datetime
 import requests
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY") or "dev-secret-change-me"
+app.secret_key = os.environ.get("SECRET_KEY")
+if not app.secret_key:
+    raise RuntimeError("SECRET_KEY must be set in the environment")
+
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
-    SESSION_COOKIE_SECURE=False,
+    SESSION_COOKIE_SECURE=(os.environ.get("FLASK_ENV") == "production"),
     SESSION_COOKIE_SAMESITE="Lax",
 )
 DATABASE = "farm.db"
