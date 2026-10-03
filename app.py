@@ -513,6 +513,14 @@ def check_weather_alerts(farm_id, user_id, lat, lon):
 
 
 # ---------- Auth routes ----------
+@app.route("/robots.txt")
+def robots_txt():
+    return app.send_static_file("robots.txt")
+
+
+@app.route("/sitemap.xml")
+def sitemap_xml():
+    return app.send_static_file("sitemap.xml")
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
     if request.method == "POST":
