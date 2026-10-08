@@ -1,0 +1,18 @@
+{
+  "name": "FTI - Farm Tech Intelligence",
+  "short_name": "FTI",
+  "description": "Track crops, fields, harvests, and get weather and market insights for your farm.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f7f5",
+  "theme_color": "#1e5c2c",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/static/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

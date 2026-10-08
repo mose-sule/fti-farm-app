@@ -15,6 +15,11 @@
         Farm Tech Intelligence
         {% endblock %}
     </title>
+        <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <meta name="theme-color" content="#1e5c2c">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icon.svg') }}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="FTI">
     <link
         rel="stylesheet"
        href="{{ url_for('static', filename='css/style.css') }}"
@@ -299,6 +304,9 @@ document.addEventListener('click', function(event) {
     if (menu && menu.classList.contains('show')) {
         if (!menu.contains(event.target) && event.target !== button) {
             menu.classList.remove('show');
+            if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/static/sw.js');
+}
         }
     }
 });
