@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Farm Assistant - FTI{% endblock %}
+{% block content %}
+
+<h1 style="font-size:20px; margin-bottom:16px;">🌱 Farm Assistant</h1>
+
+<div class="card">
+    <p style="font-size:13px; color:#888; margin-bottom:16px;">Ask anything about your crops, weather, or what to plant next. I'll use your farm's real data to answer.</p>
+    <form method="POST" action="/assistant">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <textarea name="question" rows="3" placeholder="e.g. Should I plant tomatoes this season?" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; font-family:inherit;">{{ question or '' }}</textarea>
+        <button type="submit" class="btn" style="width:100%; margin-top:12px;">Ask</button>
+    </form>
+</div>
+
+{% if answer %}
+<div class="card" style="background:#eafaf0;">
+    <div style="font-weight:700; font-size:13px; margin-bottom:8px; color:#2f7a3f;">Answer</div>
+    <div style="font-size:14px; line-height:1.6; white-space:pre-wrap;">{{ answer }}</div>
+</div>
+{% endif %}
+
+{% endblock %}

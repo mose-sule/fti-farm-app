@@ -318,6 +318,22 @@ def get_market_insights(market_area_id):
 
 
 OPENWEATHER_API_KEY = os.environ.get("OPENWEATHER_API_KEY")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+
+
+def ask_gemini(prompt):
+    try:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent"
+        response = requests.post(
+            url,
+            headers={"x-goog-api-key": GEMINI_API_KEY, "Content-Type": "application/json"},
+            json={"contents": [{"parts": [{"text": prompt}]}]},
+            timeout=15,
+        )
+        data = response.json()
+        return data["candidates"][0]["content"]["parts"][0]["text"]
+    except Exception as e:
+        return "Sorry, I couldn't get an answer right now. Please try again."
 
 CROP_ICONS = {
     "potato": "🥔", "potatoes": "🥔",
@@ -783,7 +799,67 @@ def home():
         farm_location=farm_with_location,
     )
 
+@app.route("/assistant", methods=["GET", "POST"])
+@login_required
+def assistant():
+    connection = get_database()
+    user_id = current_user_id()
+    answer = None
+    question = None
 
+    if request.method == "POST":
+        question = request.form.get("question", "").strip()
+        if question:
+            crops = connection.execute("""
+                SELECT crop_name, variety, status, expected_harvest_date
+                FROM crops WHERE farm_id IN (SELECT farm_id FROM farms WHERE user_id = ?)
+                AND status = 'growing'
+            """, (user_id,)).fetchall()
+
+            farm_with_location = connection.execute("""
+                SELECT * FROM farms WHERE user_id = ? AND latitude IS NOT NULL LIMIT 1
+            """, (user_id,)).fetchone()
+
+            weather_line = "No weather data available."
+            if farm_with_location:
+                w = get_weather(farm_with_location["latitude"], farm_with_location["longitude"])
+                if w:
+                    weather_line = f"Current weather: {w['temp']}°C, {w['description']}."
+
+            crop_lines = "\n".join(
+                f"- {c['crop_name']} ({c['variety']}), harvest expected {c['expected_harvest_date']}"
+                for c in crops
+            ) or "No crops currently growing."
+
+            farm_for_market = connection.execute(
+                "SELECT * FROM farms WHERE user_id = ? LIMIT 1", (user_id,)
+            ).fetchone()
+            market_line = "No market data available."
+            if farm_for_market and farm_for_market["market_area_id"]:
+                insights = get_market_insights(farm_for_market["market_area_id"])
+                if insights:
+                    market_line = "\n".join(
+                        f"- {i['crop_name']}: {i['percent']}% of farms in your area are growing this"
+                        for i in insights
+                    )
+
+            prompt = f"""You are a helpful farming assistant for a Kenyan smallholder farmer using the FTI app.
+Answer the farmer's question clearly and practically, using the context below where relevant. Keep answers concise (a few short paragraphs max).
+
+FARMER'S CURRENT CROPS:
+{crop_lines}
+
+{weather_line}
+
+LOCAL MARKET DATA (crop oversupply in their area):
+{market_line}
+
+FARMER'S QUESTION:
+{question}"""
+
+            answer = ask_gemini(prompt)
+
+    return render_template("assistant.html", answer=answer, question=question)
 @app.route("/notifications")
 @login_required
 def notifications():
