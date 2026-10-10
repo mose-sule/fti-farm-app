@@ -332,7 +332,7 @@ def ask_gemini(prompt):
         )
         data = response.json()
         return data["candidates"][0]["content"]["parts"][0]["text"]
-        except Exception as e:
+    except Exception as e:
         try:
             return f"DEBUG RESPONSE: {response.text[:500]}"
         except Exception:
