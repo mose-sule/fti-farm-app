@@ -333,7 +333,7 @@ def ask_gemini(prompt):
         data = response.json()
         return data["candidates"][0]["content"]["parts"][0]["text"]
     except Exception as e:
-        return "Sorry, I couldn't get an answer right now. Please try again."
+                return f"DEBUG ERROR: {e}"
 
 CROP_ICONS = {
     "potato": "🥔", "potatoes": "🥔",
