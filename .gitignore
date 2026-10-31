@@ -6,3 +6,4 @@ server_log.txt
 cookies.txt
 backups/
 farm.db.*
+*.save

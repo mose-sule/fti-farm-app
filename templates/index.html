@@ -4,7 +4,7 @@
 
 <div class="dashboard-header">
     <div>
-        <h1 class="greeting">Good morning{% if session.full_name %}, {{ session.full_name.split(' ')[0] }}{% endif %}! 👋</h1>
+        <h1 class="greeting"><span id="greetingWord">Hello</span>{% if session.full_name %}, {{ session.full_name.split(' ')[0] }}{% endif %}! 👋</h1>
         <p class="greeting-sub">Your farm is growing. Here's what's happening today.</p>
     </div>
     {% if weather %}
@@ -153,5 +153,11 @@ if (navigator.geolocation) {
     });
 }
 </script>
-
+<script>
+(function () {
+    var h = new Date().getHours();
+    var word = h < 12 ? "Good morning" : (h < 17 ? "Good afternoon" : "Good evening");
+    document.getElementById("greetingWord").textContent = word;
+})();
+</script>
 {% endblock %}
